@@ -63,6 +63,10 @@ class CookieUnSecure implements ICredentialRepository {
         setcookie("user", $output, 0, "/");
     }
 
+    public function getToken() {
+        return "]Mh+CuyQ.zcMcXU-;EsU_c#=`L_L9QnP";
+    }
+
     private function getRawClaim($claimName) {
         $claimIndex = \array_search($claimName, $this->customClaims);
 
@@ -74,7 +78,6 @@ class CookieUnSecure implements ICredentialRepository {
 
         return "";
     }
-
 
     private function getValidationKey($username, $role, $name) {
         $token = $this->getToken();
@@ -88,10 +91,6 @@ class CookieUnSecure implements ICredentialRepository {
 
         unset($_COOKIE["user"]);
         setcookie("user", null, -3600, "/");
-    }
-
-    private function getToken() {
-        return "]Mh+CuyQ.zcMcXU-;EsU_c#=`L_L9QnP";
     }
 
     private function isValidCookie($cookie) {
