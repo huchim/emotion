@@ -1,7 +1,7 @@
 {
     "name": "emotion",
     "description": "Mini-framework for basic apps",
-    "version": "0.1.0-beta",
+    "version": "1.0.0-beta",
     "repositories": [
         {
             "type": "composer",
