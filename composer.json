@@ -15,5 +15,10 @@
         "league/uri": "^5.0",
         "league/openid-connect-claims": "^1.1",
         "aura/sql": "^2.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Emotion\\": "src/"
+        }
     }
 }
