@@ -42,6 +42,8 @@ class CoreRouteTest extends TestCase
 
     public function testDatabaseInConnection() {
         $expected = ["database", "dbname", "db", "catalog", "initial catalog"];
+        $conn = Core::connectionStrings("default");
+
         
     }
 }
