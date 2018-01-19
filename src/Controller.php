@@ -63,7 +63,7 @@ class Controller {
         $controllerClassFile = $this->getClassFile();
 
         if ($controllerClassFile === "") {
-            throw new \Emotion\NotFoundException("No se pudo localizar el archivo que contiene el controlador {$this->_name}");
+            throw new \Emotion\Exceptions\NotFoundException("No se pudo localizar el archivo que contiene el controlador {$this->_name}");
         }
 
         $codeInjector->tryToAdd($controllerClassFile, true, true);
@@ -95,16 +95,16 @@ class Controller {
                 Core::log("La respuesta es desconocida, se tratará como HtmlResponse.");
                 $output = new \Emotion\Responses\HtmlResponse($output);
             }
-        } catch (\Emotion\AuthException $ex) {
+        } catch (\Emotion\Exceptions\AuthException $ex) {
             Core::log("El controlador arrojó un error de tipo AuthException.");
             $output = new \Emotion\Responses\ErrorResponse(401, "Unauthorized", $ex);
-        } catch (\Emotion\NotFoundException $ex) {
+        } catch (\Emotion\Exceptions\NotFoundException $ex) {
             Core::log("El controlador arrojó un error de tipo NotFoundException.");
             $output = new \Emotion\Responses\ErrorResponse(404, "Not Found", $ex);
-        } catch (\Emotion\InternalException $ex) {
+        } catch (\Emotion\Exceptions\InternalException $ex) {
             Core::log("El controlador arrojó un error de tipo InternalException.");
             $output = new \Emotion\Responses\ErrorResponse(500, "Server Error", $ex);
-        } catch (\Emotion\RedirectException $ex) {
+        } catch (\Emotion\Exceptions\RedirectException $ex) {
             Core::log("El controlador arrojó un error de tipo RedirectException.");
             $output = new \Emotion\Responses\RedirectResponse($ex->getUrl());
         }

@@ -54,6 +54,14 @@ class HttpContext {
         throw new \Exception("La variable de contexto {$var_type} no esta definida.");
     }
 
+    public function unsetVarValue($type, $name) {
+        $var_type = "__{$type}";
+        if (isset($this->$var_type)) {
+            unset($this->$var_type[$name]);
+            return;
+        }
+    }
+
     public function setVar($type, $value) {
         $var_type = "__{$type}";
         if (isset($this->$var_type)) {
@@ -101,10 +109,19 @@ class HttpContext {
 
     public static function setCookie($name, $content, $expire = 3600, $path = "/") {
         $self = self::getInstance();
-        setcookie($name, $content, $expire, $path);
+
+        @setcookie($name, $content, $expire, $path);
 
         // Refresh cookie vars
-        $cookies = !isset($_COOKIE) ? [] : $_COOKIE;
-        $self->setVar("cookie", $cookies);
+        if ($expire <= 0) {
+            $self->unsetVarValue("cookie", $name);
+        } else {
+            $self->setVarValue("cookie", $name, $content);
+        }
+    }
+
+    public static function unsetCookie($cookieName, $path = "/") {
+        $self = self::getInstance();
+        $self->setCookie($cookieName, null, -1, $path);
     }
 }

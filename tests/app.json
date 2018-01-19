@@ -1,0 +1,5 @@
+{
+    "connectionStrings": {
+        "default": "database=test;value=1"
+    }
+}

@@ -1,4 +1,4 @@
-<?php namespace Emotion;
+<?php namespace Emotion\Exceptions;
 
 class RedirectException extends \Exception {
     private $url = "/";

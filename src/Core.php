@@ -1,5 +1,9 @@
 <?php namespace Emotion;
 
+Utils::registerErrorHandler();
+
+use Emotion\Exceptions\ExceptionCodes;
+
 class Core {
     /**
      * Configuración
@@ -32,15 +36,10 @@ class Core {
             $this->router->setBasePath($this->configuration->getBasePath());
         }
 
-        $this->info = [];
-
-        if (file_exists("package.json")) {
-            $this->info = json_decode(\file_get_contents("package.json"), true);
-        }
-
-        if (file_exists("app.json")) {
-            $this->info = array_merge($this->info, json_decode(\file_get_contents("app.json"), true));
-        }
+        // Unir la configuración de la aplicación.
+        $this->info = array_merge(
+            JsonConfig::tryGetJson("package.json"), 
+            JsonConfig::tryGetJson("app.json"));
     }
 
     public static function loadConfig($fileName) {
@@ -68,11 +67,11 @@ class Core {
         $connections = Core::get("connectionStrings");
 
         if (!is_array($connections)) {
-            throw new \Exception("No se pudo encontrar la sección de conexiones en app.json");
+            throw new \Exception(ExceptionCodes::S_CONNECTIONS_EMPTY, ExceptionCodes::E_CONNECTIONS_EMPTY);
         }
 
         if (!isset($connections[$connectionName])) {
-            throw new \Exception("No se puede encontra la cadena de conexión con el nombre {$connecctionName}");
+            throw new \Exception(ExceptionCodes::S_CONNECTIONS_MISSING, ExceptionCodes::E_CONNECTIONS_MISSING);
         }
 
         $connectionParts = explode(";", $connections[$connectionName]);
@@ -80,6 +79,12 @@ class Core {
 
         foreach ($connectionParts as $connectionOption) {
             $options = explode("=", $connectionOption);
+
+            if (count($options) !== 2) {
+                // Esta sección en la cadena no representa un patrón clave-valor.
+                continue;
+            }
+
             $optionName = strtolower($options[0]);
             $optionValue = $options[1];
             $connectionOptions[$optionName] = $optionValue;
@@ -90,7 +95,7 @@ class Core {
 
     public static function log($message) {
         // TODO: Deshabilitar cuando no sea necesario.
-        file_put_contents('php://stderr', $message . "\n");
+        //file_put_contents('php://stderr', $message . "\n");
     }
 
     /**

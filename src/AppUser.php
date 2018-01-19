@@ -1,9 +1,11 @@
 <?php namespace Emotion;
 
+use Emotion\Exceptions\ExceptionCodes;
+
 class AppUser extends \League\OpenIdConnectClaims\ClaimsSet
 {
     protected $customAttributes = [];
-    protected $customClaims = array("role", "group");
+    protected $customClaims = array("role", "group", "password");
 
     public function __construct($standardAttributes = array(), $customAttributes = array()) {
         $this->attributes = $standardAttributes;
@@ -18,8 +20,26 @@ class AppUser extends \League\OpenIdConnectClaims\ClaimsSet
         try {
             return $this->getClaim("sub");
         } catch (\Exception $ex) {
-            throw new \Emotion\InternalException("El identificador no esta configurado aún, utilice isLogged() para determinar si existe un usuario activo.", 0, $ex);
+            throw new \Emotion\Exceptions\CredentialException(
+                ExceptionCodes::S_CLAIM_EMPTY,
+                ExceptionCodes::E_CLAIM_EMPTY, 
+                $ex);
         }
+    }
+
+    public function setRole($roleName)
+    {
+        $this->customAttributes['role'] = (string) $roleName;
+    }
+
+    public function setGroup($groupName)
+    {
+        $this->customAttributes['group'] = (string) $groupName;
+    }
+
+    public function setPassword($password)
+    {
+        $this->customAttributes['password'] = (string) $password;
     }
 
     public function getClaim($claim) {

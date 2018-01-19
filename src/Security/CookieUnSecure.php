@@ -1,9 +1,16 @@
 <?php namespace Emotion\Security;
 
-use \Emotion\Core;
+use Emotion\Core;
+use Emotion\HttpContext;
+use Emotion\Exceptions\ExceptionCodes;
+use Emotion\Exceptions\CredentialException;
+use Emotion\Exceptions\RequiredClaimException;
 
 class CookieUnSecure implements ICredentialRepository {
     private $credentials = [];
+    private $cookieName = "user";
+    private $defaultPassword = "-huchim-";
+
     // $setuid:$setusername:$setpass:$usk:$pass:$setusertype:$setdisplayname:$setgroupname
     protected $customClaims = array("sub", "preferred_username", "password", "validation", "role", "name", "group");
 
@@ -15,6 +22,8 @@ class CookieUnSecure implements ICredentialRepository {
      * @inheritDoc
      */
     public function readUser() {
+        Core::log("-----");
+        Core::log("Leyendo información del usuario en la memoria.");
         $this->readCookie();
 
         Core::log("Construyendo lista de atributos...");
@@ -28,12 +37,12 @@ class CookieUnSecure implements ICredentialRepository {
             "sub" => $this->getRawClaim("sub"),
             "preferred_username" => $this->getRawClaim("preferred_username"),
             "name" => $this->getRawClaim("name"),
-            "password" => "-huchim-",
         );
 
         $customOptions = array(
             "role" => $this->getRawClaim("role"),
             "group" => $this->getRawClaim("group"),
+            "password" => $this->defaultPassword,
         );
 
         Core::log("Existen ". count($standardOptions) . " opciones estándar y " . count($customOptions) . " personalizadas.");
@@ -41,6 +50,27 @@ class CookieUnSecure implements ICredentialRepository {
     }
 
     public function writeUser(\Emotion\AppUser $user) {
+        try {
+            return $this->internalWriteUser($user);
+        } catch (CredentialException $ex) {
+            throw $ex;
+        } catch (\LogicException $ex) {
+            throw new RequiredClaimException(ExceptionCodes::S_CLAIM_REQUIRED, ExceptionCodes::E_CLAIM_REQUIRED, $ex);
+        } catch (\Exception $ex) {
+            throw new CredentialException(ExceptionCodes::S_CLAIM_WRITE_ERROR, ExceptionCodes::E_CLAIM_WRITE_ERROR, $ex);
+        }
+
+        return -1;
+    }
+
+    private function internalWriteUser(\Emotion\AppUser $user) {
+        Core::log("-----");
+        Core::log("Escribiendo información del usuario en la memoria.");
+
+        if ($user->getClaim("password") !== $this->defaultPassword) {
+            throw new CredentialException(ExceptionCodes::S_CLAIM_PASSWORD, ExceptionCodes::E_CLAIM_PASSWORD);
+        }
+
         $validationKey = $this->getValidationKey(
             $user->getClaim("preferred_username"),
             $user->getClaim("role"),
@@ -50,7 +80,7 @@ class CookieUnSecure implements ICredentialRepository {
         $options = [
             $user->getClaim("sub"),
             $user->getClaim("preferred_username"),
-            "-huchim-",
+            $this->defaultPassword,
             $validationKey,
             $user->getClaim("role"),
             $user->getClaim("name"),
@@ -60,7 +90,9 @@ class CookieUnSecure implements ICredentialRepository {
         $output = base64_encode(implode(":", $options));
         
         // Requiere que se refresque la pagina.
-        setcookie("user", $output, 0, "/");
+        HttpContext::setCookie($this->cookieName, $output);
+
+        return 0;
     }
 
     public function getToken() {
@@ -89,8 +121,7 @@ class CookieUnSecure implements ICredentialRepository {
         Core::log("Eliminando la cookie, el navegador no la tomará en cuenta en la siguiente solicitud.");
         $this->credentials = array();
 
-        unset($_COOKIE["user"]);
-        setcookie("user", null, -3600, "/");
+        HttpContext::unsetCookie($this->cookieName);
     }
 
     private function isValidCookie($cookie) {
@@ -99,7 +130,6 @@ class CookieUnSecure implements ICredentialRepository {
             Core::log("La cookie no contiene el identificador en el primer índice.");
             return false;
         }
-
 
         $token = $this->getToken();
         $cookieValidationKey = $cookie[3];
@@ -120,14 +150,14 @@ class CookieUnSecure implements ICredentialRepository {
 
     private function readCookie() {
         Core::log("Leyendo información desde una cookie");
-        if (isset($_COOKIE["user"])) {
-            $user = $_COOKIE["user"];
-        } else {
+        $cookie = HttpContext::cookie($this->cookieName);
+
+        if ($cookie === null) {
             Core::log("No existe la cookie de usuario en el sistema.");
             return;
         }
 
-        $credentials = $this->readCookieContent($user);
+        $credentials = $this->readCookieContent($cookie);
         $serial = $this->getToken();
 
         if ($this->isValidCookie($credentials)) {
