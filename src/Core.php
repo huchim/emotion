@@ -1,45 +1,39 @@
 <?php namespace Emotion;
 
-Utils::registerErrorHandler();
-
+use Emotion\Routes\RouteController;
 use Emotion\Exceptions\ExceptionCodes;
+use Emotion\Configuration\ConfigurationCore;
 
-class Core {
+class Core extends RouteController {
     /**
      * Configuración
      *
-     * @var \Emotion\Configuration\CoreConfiguration
+     * @var \Emotion\Configuration\ConfigurationCore
      */
     private $configuration = null;
-
-    /**
-     * Enrutador.
-     *
-     * @var \AltoRouter
-     */
-    private $router = null;
     protected static $instance = null;
     private $routeResult = null;
 
     public $info = array();
 
-    private function __construct() {
-        // Crear configuración inicial.
-        $this->router = new \AltoRouter();
+    protected function __construct() {
+        parent::__construct();
+        $this->configuration = ConfigurationCore::getInstance();
         $this->init();
     }
 
     public function init() {
-        $this->configuration = Configuration\CoreConfiguration::getInstance();
-
-        if ($this->configuration->getBasePath() !== "") {
-            $this->router->setBasePath($this->configuration->getBasePath());
-        }
-
         // Unir la configuración de la aplicación.
         $this->info = array_merge(
-            JsonConfig::tryGetJson("package.json"), 
+            JsonConfig::tryGetJson("package.json"),
             JsonConfig::tryGetJson("app.json"));
+            
+        // Actualizar la configuración desde el arreglo.
+        $this->configuration->loadConfigFromArray($this->info);
+
+        if (isset($this->info["basePath"])) {
+            self::setRouterBase($this->info["basePath"]);
+        }
     }
 
     public static function loadConfig($fileName) {
@@ -63,6 +57,12 @@ class Core {
         return "";
     }
 
+    /**
+     * Devuelve una lista de propiedades de la conexión.
+     *
+     * @param string $connectionName Nombre de la conexión.
+     * @return array
+     */
     public static function connectionStrings($connectionName) {
         $connections = Core::get("connectionStrings");
 
@@ -107,86 +107,6 @@ class Core {
         return new \Emotion\Security\CookieUnSecure();
     }
 
-    public static function addMvc($routeName = "default", $rules = "[a:controllerName]?/[a:controllerAction]?/?") {
-        Core::map( 'GET|POST', $rules, function($controllerName = "Home", $controllerAction = "Index") {
-            // Obtener el acceso al controlador.
-            $controller = new \Emotion\Controller($controllerName, $controllerAction);
-        
-            // Y Ejecutarla    
-            $output = $controller->run();
-        
-            // Recuperar la lista de variables del controlador.
-            $viewbag = (array)$controller->getViewBag();
-            
-            // Si devuelve una cadena de texto, la convierto en una vista y
-            // el contenido lo transfiero a la nueva instancia.
-            if ($output instanceof \Emotion\Responses\HtmlResponse) {
-                $output = new \Emotion\Responses\ViewResponse($controllerName, $controllerAction, $viewbag);
-                $output->content = $output->content;
-            }
-            
-            // Solo la proceso si el resultado es una vista.
-            if ($output instanceof \Emotion\Responses\ViewResponse) {
-                // El Controlador pudo haber cambiado el nombre de la vista, así que no debo asumir que es
-                // el mismo de la solicitud.
-                $controllerAction = $output->getViewName();
-
-                // Envio el resultado a 
-                $viewEngine = new \Emotion\ViewEngine($controllerName, $controllerAction, $controller->getBaseDir("views"));
-        
-                $viewEngine->render($output, $viewbag);
-            } else {
-                // Ejecutarla y enviar la salida al navegador.
-                // Solo en caso de que no sea una vista.
-                $output->process();
-            }  
-        
-        }, $routeName);
-    }
-
-    public static function addMvcApi($routeName = "api", $rules = "api/[a:controllerName]?/[a:controllerAction]?/?") {
-        Core::map( 'GET|POST', $rules, function($controllerName = "Home", $controllerAction = "Index") {
-            $apiFolder = Core::getInstance()->getConfig()->api;
-            
-            // Obtener el acceso al controlador.
-            $controller = new \Emotion\Controller($controllerName, $controllerAction, $apiFolder);
-        
-            // Ejecutarla y enviar la salida al navegador.
-            $controller->run()->process();
-        }, $routeName);
-    }
-
-    public static function addStaticFiles($routeName = "public", $rules = "public/[*:publicFile]") {
-        Core::map( "GET", $rules, function($publicFile) {
-            Core::serve($publicFile);
-        }, $routeName);
-    }
-
-    public static function serve($file, $baseDir = "public") {
-        $filePath = "{$baseDir}/{$file}";
-        $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
-        $mimesSupported = array(
-            "css" => " 	text/css",
-            "png" => "image/png",
-            "gif" => "image/gif",
-            "jpg" => "image/jpeg",
-            "js" => "application/x-javascript",
-            "txt" => "text/plain",
-        );
-
-        $selectedMime = "text/plain";
-
-        if (isset($mimesSupported[$fileExtension])) {
-            $selectedMime = $mimesSupported[$fileExtension];
-        }
-
-        // Enviar el encabezado correcto.
-        header("Content-Type: {$selectedMime}");
-
-        // Enviar el contenido al navegador.
-        echo file_get_contents($filePath);
-    }
-
     /**
      * Devuelve una instancia única de la configuración.
      *
@@ -218,57 +138,48 @@ class Core {
     }
 
     public static function run() {
-        $self = Core::getInstance();
+        $self = self::getInstance();
 
         // Analizar posibles resultados.
-        $router = $self->getRouter();
+        $router = self::getRouter();
+
+        if ($router === null) {
+            throw new Exceptions\ErrorException(
+                ExceptionCodes::S_ROUTER_INVALID, 
+                ExceptionCodes::E_ROUTER_INVALID);
+        }
+
+        $routesList = $router->getRoutes();
 
         // Si no se ha configurado ninguna ruta, agrego las predeterminadas:
-        if (count($router->getRoutes()) === 0) {
+        if (count($routesList) === 0) {
             Core::addStaticFiles();
             Core::addMvcApi();
             Core::addMvc();
         }
 
-        $match = $router->match();
+        $requestUri = HttpContext::server("REQUEST_URI");
+        $requestMethod = HttpContext::server("REQUEST_METHOD");
+
+        $match = $router->match($requestUri, $requestMethod);
 
         // Definer resultado activo del enrutador.
         $self->setRouterResults($match["params"]);
 
         // Ejecutar la ruta o devolver un error 404.
         if( $match && is_callable( $match['target'] ) ) {
+            // Código usualmente en \Emotion\Routes\RouteExtra
             $c = call_user_func_array( $match['target'], $match['params'] ); 
         } else {
             // no route was matched
-            header( $_SERVER["SERVER_PROTOCOL"] . ' 404 Not Found');
+            try {
+                header(HttpContext::server("SERVER_PROTOCOL") . ' 404 Not Found');
+            } catch (\Exception $ex) {
+                throw new \Emotion\Exceptions\RouteException(
+                    ExceptionCodes::S_ROUTER_NOT_FOUND,
+                    ExceptionCodes::E_ROUTER_NOT_FOUND,
+                    $ex);
+            }
         }
     }
-
-    /**
-     * devuelve la instancia del enrutador.
-     *
-     * @return \AltoRouter
-     */
-    public function getRouter() {
-        return $this->router;
-    }
-
-    public static function setBasePath($basePath) {
-        $router = Core::getInstance()->getRouter();
-        $router->setBasePath($basePath);
-    }
-
-    /**
-	 * Map a route to a target
-	 *
-	 * @param string $method One of 5 HTTP Methods, or a pipe-separated list of multiple HTTP Methods (GET|POST|PATCH|PUT|DELETE)
-	 * @param string $route The route regex, custom regex must start with an @. You can use multiple pre-set regex filters, like [i:id]
-	 * @param mixed $target The target where this route should point to. Can be anything.
-	 * @param string $name Optional name of this route. Supply if you want to reverse route this url in your application.
-	 * @throws Exception
-	 */
-	public static function map($method, $route, $target, $name = null) {
-        $router = Core::getInstance()->getRouter();
-		$router->map($method, $route, $target, $name);
-	}
 }

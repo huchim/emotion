@@ -1,25 +1,44 @@
 <?php namespace Emotion;
 
+use \Emotion\Exceptions\ExceptionCodes;
+use \Emotion\Configuration\ConfigurationCore;
+
 class Controller {
     private $_config;
-    private $_internal = false;
     private $_name = "";
-    private $internalDir = "";
     private $appFolder = "";
     private $action = "index";
+    private $baseFolder = "";
+    private $controllerFolder = "";
 
     /**
      * @var \Emotion\IControllerBase
      */
     private $controllerInstance = null;
     
-    public function __construct($controllerName = "", $action = "index", $baseFolder = "") {
+    public function __construct(
+        $controllerName,
+        $controllerAction = "Index",
+        $baseFolder = "") {
+        // Recuperar la estructura de directorios de la aplicación.
+        $this->_config = ConfigurationCore::getInstance()->getConfig();
+
+        if ($baseFolder === "") {
+            // Si no se pasa explicitamente un dirctorio raiz, se aplica el global.
+            $baseFolder = ConfigurationCore::getSourceDirectory();
+        }
+
+        if ($controllerName === "") {
+            $controllerName = $this->_config->controllerName;
+        }
+
+        if ($controllerAction === "") {
+            $controllerAction = $this->_config->controllerAction;
+        }
+        
         $this->_name = $controllerName;
-        $this->action = $action;
-        $this->_config = Configuration\CoreConfiguration::getInstance()->getConfig();
-        $this->internalDir = $this->_config->helper;
-        $this->appFolder = $baseFolder === "" ? $this->_config->app : $baseFolder;
-        $this->_internal = $this->isInternal();        
+        $this->action = $controllerAction;
+        $this->baseFolder = $baseFolder;
     }
 
     public function getControllerName() {
@@ -30,42 +49,21 @@ class Controller {
         return $this->action;
     }
 
-    public function getControllerPart($partName = "INDEX") {
-        if ($partName === "") {
-            $partName = "INDEX";
-        }
-
-        if (strpos($partName, "_") !== true) {
-            $partName .= "_PHP";
-        }
-
-        return $this->getPart(str_replace("_", ".", strtolower($partName)));
-    }
-
-    public function getHeaderController() {
-        return $this->getControllerPart("HEAD");
-    }
-
-    public function getApiController() {
-        return $this->getControllerPart("API");
-    }
-
-    public function getViewController() {
-        return $this->getControllerPart("INDEX");
-    }    
-
     public function init() {
         if ($this->controllerInstance !== null) {
             throw new \Exception("La instancia de este controlador ha sido inicializada.");
         }
 
-        $codeInjector = new \Emotion\CodeInjector();
         $controllerClassFile = $this->getClassFile();
 
         if ($controllerClassFile === "") {
-            throw new \Emotion\Exceptions\NotFoundException("No se pudo localizar el archivo que contiene el controlador {$this->_name}");
+            throw new \Emotion\Exceptions\NotFoundException(
+                sprintf(ExceptionCodes::S_CONTROLLER_CLASS_NOT_FOUND, $this->_name, $this->getBaseDir()),
+                ExceptionCodes::E_CONTROLLER_CLASS_NOT_FOUND
+            );
         }
 
+        $codeInjector = new \Emotion\CodeInjector();
         $codeInjector->tryToAdd($controllerClassFile, true, true);
         
         // Crear la instancia a la clase.
@@ -93,7 +91,7 @@ class Controller {
             // inicializo como una de ellas.
             if (!($output instanceof \Emotion\Responses\BaseResponse)) {
                 Core::log("La respuesta es desconocida, se tratará como HtmlResponse.");
-                $output = new \Emotion\Responses\HtmlResponse($output);
+                $output = new \Emotion\Responses\RawResponse($output);
             }
         } catch (\Emotion\Exceptions\AuthException $ex) {
             Core::log("El controlador arrojó un error de tipo AuthException.");
@@ -121,7 +119,7 @@ class Controller {
     }
 
     public function getBaseDir($suffix = "controllers") {
-        return ($this->_internal ? $this->internalDir : $this->appFolder) . "/" . $suffix;
+        return $this->baseFolder . "/" . $suffix;
     }
 
     private function getClassName() {
@@ -161,63 +159,5 @@ class Controller {
         }
 
         return ""; 
-    }
-
-    private function getPart($part) {
-        $controllerBaseFolder = ($this->_internal ? $this->internalDir : $this->appFolder);
-        $filePart = "{$controllerBaseFolder}/{$this->_name}/{$part}";
-
-        if ($part === "CLASS") {
-            return $this->getClassFile();
-        }
-
-        if (!file_exists($filePart)) {
-            return "";
-        }
-
-        return $filePart;
-    }
-
-    private function exists($controllerPart) {
-        return $this->existsEx($this->_name, $controllerPart, $this->internalDir, $this->appFolder);
-    }
-
-    private function isInternal()
-    {
-        return $this->isInternalEx($this->_name, $this->internalDir, $this->appFolder);
-    }
-
-    private function isInternalEx($controllerName, $internalFolder, $appFolder)
-    {
-        if (file_exists("{$appFolder}/controllers/{$controllerName}/")) {
-            return false;
-        }
-
-        if (file_exists("{$appFolder}/controllers/{$controllerName}.php")) {
-            return false;
-        }
-
-        if (file_exists("{$internalFolder}/controllers/{$controllerName}/")) {
-            return true;
-        }
-
-        if (file_exists("{$internalFolder}/controllers/{$controllerName}.php")) {
-            return true;
-        }
-
-        return false;
-    }
-
-    private function existsEx($controllerName, $controllerPart, $internalFolder, $appFolder) {
-        // app/controllers/home/head.php
-        if (file_exists("{$appFolder}/controllers/{$controllerName}/{$controllerPart}")) {
-            return true;
-        }
-
-        if (file_exists("{$nternalFolder}/controllers/{$controllerName}/{$controllerPart}")) {
-            return true;
-        }
-
-        return false;
     }
 }

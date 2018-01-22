@@ -8,8 +8,8 @@ class DirectoryConfiguration
     public $vendor = "vendor/";    
     public $helper = "helpers";
     public $lib = "lib";
-    public $controllerName = "home";
-    public $controllerAction = "index";
+    public $controllerName = "Home";
+    public $controllerAction = "Index";
 
     public function fromArray($config) {
         if (isset($config["root"])) { $this->root = $config["root"]; }

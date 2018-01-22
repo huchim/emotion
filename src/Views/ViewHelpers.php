@@ -1,7 +1,8 @@
 <?php namespace Emotion\Views;
 
 use \League\Uri;
-use \Emotion\Core as Core;
+use \Emotion\Core;
+use \Emotion\HttpContext;
 
 class ViewHelpers {
     private $uri = null;
@@ -13,7 +14,7 @@ class ViewHelpers {
     protected static $instance = null;
 
     public function __construct() {
-        $this->uri = Uri\Http::createFromServer($_SERVER);
+        $this->uri = Uri\Http::createFromServer(HttpContext::server());
     }
 
     /**
@@ -40,7 +41,7 @@ class ViewHelpers {
     public static function content($fileName) {
         $instance = \Emotion\Views\ViewHelpers::getInstance();
         $config = \Emotion\Configuration\CoreConfiguration::getInstance();
-        $appBasePath = $config->getBasePath();
+        $appBasePath = Core::getRouterBase();
 
         if (isset($_SERVER["SERVER_SOFTWARE"])) {
             $isDevServer = strpos($_SERVER["SERVER_SOFTWARE"], "Development") !== false;            
