@@ -92,4 +92,8 @@ class CoreRouteTest extends TestCase
         Core::setRouterBase("/base/");
         Core::run();
     }
+
+    public static function setUpBeforeClass() {
+        Core::clearRouter();
+    }
 }

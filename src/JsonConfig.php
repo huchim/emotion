@@ -13,6 +13,11 @@ class JsonConfig {
 
     private function __construct() {
         $this->callbacks["json"] = function($fileName) {
+
+            if (!file_exists($fileName)) {
+                throw new \Exception(ExceptionCodes::S_JSON_FILE_MISSING, ExceptionCodes::E_JSON_FILE_MISSING);
+            }
+
             return json_decode(\file_get_contents($fileName), true);
         };
     }
@@ -36,8 +41,6 @@ class JsonConfig {
         if (!file_exists($fileName)) {
             if ($throwError) {
                 throw new \Exception(ExceptionCodes::S_JSON_FILE_MISSING, ExceptionCodes::E_JSON_FILE_MISSING);
-            } else {
-                return array();
             }
         }
 

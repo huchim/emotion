@@ -34,7 +34,13 @@ class ApiRouteTest extends TestCase
         Core::run();
     }
 
+    public static function setUpBeforeClass() {
+        Core::clearRouter();
+        Core::addMvcApi();
+    }
+
     public static function tearDownAfterClass() {
+        Core::clearRouter();
         Core::setRouterBase("");
     }
 }

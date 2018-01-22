@@ -25,4 +25,8 @@ class RouteCore {
 
         return self::$router;
     }
+
+    public static function clearRouter() {
+        self::$router = new \AltoRouter();
+    }
 }

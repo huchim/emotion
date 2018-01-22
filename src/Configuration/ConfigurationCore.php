@@ -36,7 +36,7 @@ class ConfigurationCore
         // Cargar el contenido del archivo a un arreglo.
         $options = JsonConfig::tryGetJson($fileName);
 
-        $this->laodConfigFromArray($options);
+        $this->loadConfigFromArray($options);
     }
 
     /**
@@ -80,6 +80,12 @@ class ConfigurationCore
 
     public static function getSourceDirectory() {
         $self = self::getInstance();
-        return $self->getBasePath();
+        $path = $self->getBasePath();
+
+        if(substr($path, -1) === '/') {
+            return $path;
+        }
+
+        return $path . "/";
     }
 }

@@ -11,7 +11,7 @@ class RouteExtra extends RouteUtils {
             $subDir = ConfigurationCore::getInstance()->getConfig()->app;
 
             // Obtener el acceso al controlador.
-            $controller = new \Emotion\Controller($controllerName, $controllerAction, "{$baseDir}/{$subDir}");
+            $controller = new \Emotion\Controller($controllerName, $controllerAction, "{$baseDir}{$subDir}");
 
             // Y Ejecutarla    
             $output = $controller->run();
@@ -54,7 +54,7 @@ class RouteExtra extends RouteUtils {
             $subDir = ConfigurationCore::getInstance()->getConfig()->api;
 
             // Obtener el acceso al controlador.
-            $controller = new \Emotion\Controller($controllerName, $controllerAction, "{$baseDir}/{$subDir}");
+            $controller = new \Emotion\Controller($controllerName, $controllerAction, "{$baseDir}{$subDir}");
         
             // Ejecutarla y enviar la salida al navegador.
             $controller->run()->tryProcess();
