@@ -26,4 +26,18 @@ abstract class ExceptionCodes {
 
     const S_JSON_READ_FAILED = "El archivo JSON no se pudo leer correctamente.";
     const E_JSON_READ_FAILED = 15;
+
+    /* router */
+    const S_ROUTER_INVALID = "El enrutador no ha sido inicializado o no existe.";
+    const E_ROUTER_INVALID = 17;
+    const S_ROUTER_NOT_FOUND = "Ninguna ruta pudo entender la solicitud.";
+    const E_ROUTER_NOT_FOUND = 20;
+
+    /* response */
+    const S_RESPONSE_ERROR = "Ocurrió un problema al intentar procesar la solicitud";
+    const E_RESPONSE_ERROR = 18;
+
+    /** controller */
+    const S_CONTROLLER_CLASS_NOT_FOUND = "No se pudo localizar el archivo que contiene el controlador \"%s\" en la carpeta \"%s\".";
+    const E_CONTROLLER_CLASS_NOT_FOUND = 19;
 }
