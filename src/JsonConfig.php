@@ -9,7 +9,6 @@ class JsonConfig {
      * @var \Emotion\JsonConfig
      */
     private static $instance = null;
-    
     private $callbacks = [];
 
     private function __construct() {

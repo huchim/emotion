@@ -35,8 +35,14 @@ class HttpContext {
         return static::$instance;
     }
 
-    public function getVarValue($type, $name) {
+    public function getVarValue($type, $name = "") {
         $var_type = "__{$type}";
+
+        if (isset($this->$var_type) && $name === "") {
+            // Devolver todo el arreglo.
+            return $this->$var_type;
+        }
+
         if (isset($this->$var_type[$name])) {
             return $this->$var_type[$name];
         }
@@ -44,10 +50,16 @@ class HttpContext {
         return null;
     }
 
-    public function setVarValue($type, $name, $value) {
+    public function setVarValue($type, $nameOrData, $value = null) {
         $var_type = "__{$type}";
+
+        if (is_array($nameOrData) && $value === null) {
+            $this->$var_type = $nameOrData;
+            return;
+        }
+
         if (isset($this->$var_type)) {
-            $this->$var_type[$name] = $value;
+            $this->$var_type[$nameOrData] = $value;
             return;
         }
 
@@ -83,8 +95,12 @@ class HttpContext {
             throw new \Exception("La variable de contexto $_{$name} no existe.", 2);
         }
 
-        if (count($arguments) > 2 && count($arguments) < 1) {
+        if (count($arguments) > 2) {
             throw new \Exception("Argumentos insuficientes: " . count($arguments));
+        }
+
+        if (count($arguments) === 0) {
+            return $self->getVarValue($name);
         }
 
         if (count($arguments) === 1) {
