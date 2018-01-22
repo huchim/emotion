@@ -12,15 +12,15 @@ class RouteUtils extends RouteCore {
 	 * @throws Exception
 	 */
 	public static function map($method, $route, $target, $name = null) {
-		self::$router->map($method, $route, $target, $name);
+		self::getRouter()->map($method, $route, $target, $name);
     }
 
     public static function setRouterBase($basePath) {
-        self::$router->setBasePath($basePath);
+        self::getRouter()->setBasePath($basePath);
     }
 
     public static function getRouterBase() {
-        self::$router->getBasePath();
+        self::getRouter()->getBasePath();
     }
 
     public static function serve($file, $baseDir = "public") {
