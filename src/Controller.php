@@ -157,7 +157,6 @@ class Controller {
                 return $path;
             }
         }
-
         return ""; 
     }
 }

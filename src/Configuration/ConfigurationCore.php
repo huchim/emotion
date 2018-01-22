@@ -49,7 +49,6 @@ class ConfigurationCore
     }
 
     public function setBasePath($basePath) {
-
         $this->basePath = $basePath;
     }
 
@@ -91,7 +90,7 @@ class ConfigurationCore
             $subFolder = substr($subFolder, 1);
         }
 
-        if ($subFolder !== "") {
+        if ($subFolder !== "" && $path != "") {
             $subFolder = "/{$subFolder}";
         }
 
