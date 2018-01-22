@@ -12,13 +12,13 @@ class ApiRouteTest extends TestCase
 {
     public function testNotFoundRoute() {
         $this->expectExceptionCode(ExceptionCodes::E_ROUTER_NOT_FOUND);
-        HttpContext::server("REQUEST_URI", "api/foo/bar/foo/bar/foo");
+        HttpContext::server("REQUEST_URI", "/api/foo/bar/foo/bar/foo");
         Core::run();
     }
 
     public function testNotFoundController() {
         $this->expectExceptionCode(ExceptionCodes::E_CONTROLLER_CLASS_NOT_FOUND);
-        HttpContext::server("REQUEST_URI", "api/siap/Home2/?foo=1");
+        HttpContext::server("REQUEST_URI", "/api/foo/Home2/?foo=1");
         
         try {
             Core::run();
@@ -30,11 +30,13 @@ class ApiRouteTest extends TestCase
     public function testRunWithBase() {
         $this->expectOutputString("JSON");
         HttpContext::server("REQUEST_URI", "/base/api/Home2/Index/?foo=1");
+        
+        Core::clearRouter();
         Core::setRouterBase("/base/");
         Core::run();
     }
 
-    public static function setUpBeforeClass() {
+    public function setUp() {
         Core::clearRouter();
         Core::addMvcApi();
     }

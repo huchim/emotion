@@ -63,7 +63,7 @@ class CoreRouteTest extends TestCase
 
     public function testRun() {
         $this->expectOutputString("Se ejecutó Index.");
-        HttpContext::server("REQUEST_URI", "Home");
+        HttpContext::server("REQUEST_URI", "/Home");
         Core::run();
     }
 
@@ -77,7 +77,7 @@ class CoreRouteTest extends TestCase
 
     public function testNotFoundController() {
         $this->expectExceptionCode(ExceptionCodes::E_CONTROLLER_CLASS_NOT_FOUND);
-        HttpContext::server("REQUEST_URI", "siap/Home/?foo=1");
+        HttpContext::server("REQUEST_URI", "/Foo/Home/?foo=1");
         
         try {
             Core::run();
@@ -88,8 +88,11 @@ class CoreRouteTest extends TestCase
 
     public function testRunWithBase() {
         $this->expectOutputString("Se ejecutó Index.");
-        HttpContext::server("REQUEST_URI", "/base/Home/Index/?foo=1");
+        HttpContext::server("REQUEST_URI", "/base/Home/Index/?foo=bar");
+        
+        Core::clearRouter();
         Core::setRouterBase("/base/");
+
         Core::run();
     }
 

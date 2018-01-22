@@ -1,6 +1,7 @@
 <?php namespace Emotion\Routes;
 
 class RouteUtils extends RouteCore {
+    private static $routerBaseUrl = "";
 
     /**
 	 * Map a route to a target
@@ -15,12 +16,32 @@ class RouteUtils extends RouteCore {
 		self::getRouter()->map($method, $route, $target, $name);
     }
 
-    public static function setRouterBase($basePath) {
-        self::getRouter()->setBasePath($basePath);
+    public static function setRouterBase($routerBaseUrl) {
+        self::$routerBaseUrl = $routerBaseUrl;
+        self::getRouter()->setBasePath(self::$routerBaseUrl);
     }
 
     public static function getRouterBase() {
-        self::getRouter()->getBasePath();
+        return self::$routerBaseUrl;
+    }
+
+    public static function formatRouteRule($routeRule) {
+        // Hay que determinar si existe una base a la URL para
+        // poder agregar el prefijo correctamente.
+        $routerBase = self::$routerBaseUrl;
+        $startWithSlash = substr($routeRule, 0, 1) === "/";
+        
+        if (!$startWithSlash && $routerBase === "") {
+            // Si no existe una URL base, se debe comenzar con una barra diagonal.
+            $routeRule = "/{$routeRule}";
+        }
+
+        if ($startWithSlash && $routerBase !== "") {
+            // Si existe una URL base, no se debe comenzar con una barra diagonal.
+            $routeRule = substr($routeRule, 1);
+        }
+
+        return $routeRule;
     }
 
     public static function serve($file, $baseDir = "public") {

@@ -164,6 +164,7 @@ class Core extends RouteController {
 
         $requestUri = HttpContext::server("REQUEST_URI");
         $requestMethod = HttpContext::server("REQUEST_METHOD");
+        $urlBase = self::getRouterBase();
 
         $match = $router->match($requestUri, $requestMethod);
 
@@ -179,6 +180,11 @@ class Core extends RouteController {
             try {
                 header(HttpContext::server("SERVER_PROTOCOL") . ' 404 Not Found');
             } catch (\Exception $ex) {
+                // Recuperar una lista de rutas y reglas para mostrar.
+                foreach ($routesList as $routeName => $route) {
+                    $ex = new \Exception("No se pudo coincidir \"{$requestUri}\" (base: {$urlBase}) con {$routeName} bajo la regla {$route[1]}", 0, $ex);
+                }
+
                 throw new \Emotion\Exceptions\RouteException(
                     ExceptionCodes::S_ROUTER_NOT_FOUND,
                     ExceptionCodes::E_ROUTER_NOT_FOUND,
