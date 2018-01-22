@@ -1,9 +1,10 @@
 <?php namespace Emotion\Responses;
 
+use \Emotion\HttpContext;
+
 class ErrorResponse extends BaseResponse {
     private $errorCode = 500;
     private $errorMessage = "Unauthorized";
-    private $innerException = null;
 
     public function __construct($errorCode, $errorMessage, $exception = null) {
         $this->errorCode = $errorCode;
@@ -12,9 +13,9 @@ class ErrorResponse extends BaseResponse {
     }
 
     public function process() {
-        header( $_SERVER["SERVER_PROTOCOL"] . " {$this->errorCode} {$this->errorMessage}");
+        header(HttpContext::server("SERVER_PROTOCOL") . " {$this->errorCode} {$this->errorMessage}");
 
-        $config = \Emotion\Configuration\CoreConfiguration::getInstance();
+        $config = \Emotion\Configuration\ConfigurationCore::getInstance();
 
         if ($config->isDebug()) {
             echo "Ocurrió un problema en el sistema, el código es <strong>{$this->errorCode} - {$this->errorMessage}</strong>. <br /><br />";
