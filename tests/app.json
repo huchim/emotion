@@ -1,5 +1,6 @@
 {
     "connectionStrings": {
         "default": "database=test;value=1"
-    }
+    },
+    "src": "tests"
 }
