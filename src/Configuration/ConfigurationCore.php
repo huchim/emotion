@@ -78,14 +78,23 @@ class ConfigurationCore
         return static::$instance;
     }
 
-    public static function getSourceDirectory() {
+    public static function getSourceDirectory($subFolder = "") {
         $self = self::getInstance();
         $path = $self->getBasePath();
 
+        // Eliminar diagonoal final.
         if(substr($path, -1) === '/') {
-            return $path;
+            $path = substr($path, 0, -1);
         }
 
-        return $path . "/";
+        if(substr($subFolder, 0, 1) === '/') {
+            $subFolder = substr($subFolder, 1);
+        }
+
+        if ($subFolder !== "") {
+            $subFolder = "/{$subFolder}";
+        }
+
+        return $path . $subFolder;
     }
 }

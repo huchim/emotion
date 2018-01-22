@@ -9,11 +9,11 @@ class RouteExtra extends RouteUtils {
             $rules = self::formatRouteRule($rules);
 
             self::map( 'GET|POST', $rules, function($controllerName = "Home", $controllerAction = "Index") {
-                $baseDir = ConfigurationCore::getSourceDirectory();
                 $subDir = ConfigurationCore::getInstance()->getConfig()->app;
+                $baseDir = ConfigurationCore::getSourceDirectory($subDir);
 
                 // Obtener el acceso al controlador.
-                $controller = new \Emotion\Controller($controllerName, $controllerAction, "{$baseDir}{$subDir}");
+                $controller = new \Emotion\Controller($controllerName, $controllerAction, $baseDir);
 
                 // Y Ejecutarla    
                 $output = $controller->run();
@@ -54,11 +54,11 @@ class RouteExtra extends RouteUtils {
 
             self::map( 'GET|POST', $rules, function($controllerName = "Home", $controllerAction = "Index") {
                 // Recuperar el directorio de las API
-                $baseDir = ConfigurationCore::getSourceDirectory();
                 $subDir = ConfigurationCore::getInstance()->getConfig()->api;
+                $baseDir = ConfigurationCore::getSourceDirectory($subDir);
 
                 // Obtener el acceso al controlador.
-                $controller = new \Emotion\Controller($controllerName, $controllerAction, "{$baseDir}{$subDir}");
+                $controller = new \Emotion\Controller($controllerName, $controllerAction, $baseDir);
             
                 // Ejecutarla y enviar la salida al navegador.
                 $controller->run()->tryProcess();
