@@ -1,3 +1,3 @@
 <?php namespace Emotion;
 
-class ApiController extends ControllerBase { }
+class ApiControllerBase extends ControllerBase { }
