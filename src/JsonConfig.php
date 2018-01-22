@@ -36,6 +36,8 @@ class JsonConfig {
         if (!file_exists($fileName)) {
             if ($throwError) {
                 throw new \Exception(ExceptionCodes::S_JSON_FILE_MISSING, ExceptionCodes::E_JSON_FILE_MISSING);
+            } else {
+                return array();
             }
         }
 
