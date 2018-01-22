@@ -95,7 +95,11 @@ class Core extends RouteController {
 
     public static function log($message) {
         // TODO: Deshabilitar cuando no sea necesario.
-        //file_put_contents('php://stderr', $message . "\n");
+        $config = \Emotion\Configuration\ConfigurationCore::getInstance();
+
+        if ($config->isDebug()) {
+            file_put_contents('php://stderr', $message . "\n");
+        }
     }
 
     /**
