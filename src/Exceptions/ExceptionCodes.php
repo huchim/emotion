@@ -36,8 +36,16 @@ abstract class ExceptionCodes {
     /* response */
     const S_RESPONSE_ERROR = "Ocurrió un problema al intentar procesar la solicitud";
     const E_RESPONSE_ERROR = 18;
+    const S_RESPONSE_HEADER_ERROR = "No se puede enviar el encabezado \"%s\".";
+    const E_RESPONSE_HEADER_ERROR = 22;
 
     /** controller */
     const S_CONTROLLER_CLASS_NOT_FOUND = "No se pudo localizar el archivo que contiene el controlador \"%s\" en la carpeta \"%s\".";
     const E_CONTROLLER_CLASS_NOT_FOUND = 19;
+
+    /** files */
+    const S_ROUTE_STATIC_FILE_NOTFOUND = "No se pudo localizar el archivo \"%s\" en la carpeta \"%s\".";
+    const E_ROUTE_STATIC_FILE_NOTFOUND = 21;
+
+    
 }
