@@ -54,6 +54,7 @@ class RouteUtils extends RouteCore {
             "jpg" => "image/jpeg",
             "js" => "application/x-javascript",
             "txt" => "text/plain",
+            "html" => "text/html",
         );
 
         $selectedMime = "text/plain";

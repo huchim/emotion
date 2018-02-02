@@ -68,9 +68,31 @@ class RouteExtra extends RouteUtils {
     public static function addStaticFiles(
         $routeName = "public", 
         $rules = "public/[*:publicFile]") {
-            $rules = self::formatRouteRule($rules);
-            self::map( "GET", $rules, function($publicFile) {
-                self::serve($publicFile);
+            self::addStaticFolderEx("public", $rules, $routeName);
+    }
+
+    public static function addStaticFolder(
+        $folderName,
+        $virtualFolder = "",
+        $rules = "{virtualFolder}/[*:publicFile]")
+        {
+            if ($virtualFolder === "") {
+                $virtualFolder = $folderName;
+            }   
+
+            // Asignar el mismo nombre de la carpeta.
+            $rules = str_replace("{virtualFolder}", $virtualFolder, $rules);
+            self::addStaticFolderEx($folderName, $rules, $folderName . "Rule");
+    }
+
+    public static function addStaticFolderEx(
+        $folderName,
+        $routeRules,
+        $routeName) {
+            // Configurar correctamente la regla.
+            $rules = self::formatRouteRule($routeRules);
+            self::map( "GET", $rules, function($publicFile) use ($folderName) {
+                self::serve($publicFile, $folderName);
             }, $routeName);
     }
 }
