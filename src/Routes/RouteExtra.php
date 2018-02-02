@@ -8,6 +8,8 @@ class RouteExtra extends RouteUtils {
         $rules = "[a:controllerName]?/[a:controllerAction]?/?") {
             $rules = self::formatRouteRule($rules);
 
+            \Emotion\Core::log("Agregando una ruta MVC. Regla: " . $rules );
+
             self::map( 'GET|POST', $rules, function($controllerName = "Home", $controllerAction = "Index") {
                 $subDir = ConfigurationCore::getInstance()->getConfig()->app;
                 $baseDir = ConfigurationCore::getSourceDirectory($subDir);
@@ -52,6 +54,8 @@ class RouteExtra extends RouteUtils {
         $rules = "api/[a:controllerName]?/[a:controllerAction]?/?") {
             $rules = self::formatRouteRule($rules);
 
+            \Emotion\Core::log("Agregando una ruta API MVC. Regla: " . $rules );
+
             self::map( 'GET|POST', $rules, function($controllerName = "Home", $controllerAction = "Index") {
                 // Recuperar el directorio de las API
                 $subDir = ConfigurationCore::getInstance()->getConfig()->api;
@@ -71,24 +75,40 @@ class RouteExtra extends RouteUtils {
             self::addStaticFolderEx("public", $rules, $routeName);
     }
 
+    /**
+     * Agrega una carpeta estática al enrutador.
+     *
+     * @param string $folderName Nombre de la carpeta existente.
+     * @param string $defaultDocument Archivo predeterminado.
+     * @param string $virtualFolder Carpeta que será usada en la URL. Dejar vacía para usar la raiz de la URL.
+     * @param string $rules Regla a utilizar en el enrutador.
+     * @return void
+     */
     public static function addStaticFolder(
         $folderName,
-        $virtualFolder = "",
-        $rules = "{virtualFolder}/[*:publicFile]")
+        $defaultDocument = null,
+        $virtualFolder = null,
+        $rules = "{virtualFolder}[*:publicFile]")
         {
-            if ($virtualFolder === "") {
-                $virtualFolder = $folderName;
-            }   
+            if ($virtualFolder === null) {
+                $virtualFolder = $folderName . "/";
+            }
+
+            if ($defaultDocument != null) {
+                // Asignar documento predeterminado.
+                $rules .= "?/";
+            }
 
             // Asignar el mismo nombre de la carpeta.
             $rules = str_replace("{virtualFolder}", $virtualFolder, $rules);
-            self::addStaticFolderEx($folderName, $rules, $folderName . "Rule");
+            self::addStaticFolderEx($folderName, $rules, $folderName . "Rule-" . $rules, $defaultDocument);
     }
 
     public static function addStaticFolderEx(
         $folderName,
         $routeRules,
-        $routeName) {
+        $routeName,
+        $defaultDocument = null) {
             // Localizar la ruta principal de la aplicación.
             $root = ConfigurationCore::getSourceDirectory();
             
@@ -97,7 +117,23 @@ class RouteExtra extends RouteUtils {
 
             // Configurar correctamente la regla.
             $rules = self::formatRouteRule($routeRules);
-            self::map( "GET", $rules, function($publicFile) use ($folderName) {
+
+            \Emotion\Core::log("Agregando una ruta estática al ruteador. Regla: " . $rules . ", folder: " . $folderName);
+
+            self::map("GET", $rules, function($publicFile = null) use ($folderName, $defaultDocument) {
+                if ($publicFile == null && $defaultDocument == null) {
+                    // No se permite no pasar el nombre del archivo cuando no hay un documento predeterminado.
+                    throw new \Emotion\Exceptions\InternalException(
+                        sprintf(ExceptionCodes::S_ROUTE_STATIC_FILE_EMPTY, $baseDir),
+                        ExceptionCodes::E_ROUTE_STATIC_FILE_EMPTY
+                    );
+                }
+
+                if ($publicFile == null && $defaultDocument != null) {
+                    // Asignar el nombre del archivo cuando este no haya sido definido.
+                    $publicFile = $defaultDocument;
+                }
+
                 self::serve($publicFile, $folderName);
             }, $routeName);
     }

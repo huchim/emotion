@@ -59,6 +59,7 @@ class HttpContext {
         }
 
         if (isset($this->$var_type)) {
+            \Emotion\Core::log("Emulando {$nameOrData} = " . $value);
             $this->$var_type[$nameOrData] = $value;
             return;
         }

@@ -33,6 +33,13 @@ abstract class ExceptionCodes {
     const S_ROUTER_NOT_FOUND = "Ninguna ruta pudo entender la solicitud.";
     const E_ROUTER_NOT_FOUND = 20;
 
+    const S_ROUTE_STATIC_FILE_NOTFOUND = "No se pudo localizar el archivo \"%s\" en la carpeta \"%s\".";
+    const E_ROUTE_STATIC_FILE_NOTFOUND = 21;
+
+
+    const S_ROUTE_STATIC_FILE_EMPTY = "No se ha definido un archivo predeterminado para esta carpeta \"%s\".";
+    const E_ROUTE_STATIC_FILE_EMPTY = 23;
+
     /* response */
     const S_RESPONSE_ERROR = "Ocurrió un problema al intentar procesar la solicitud";
     const E_RESPONSE_ERROR = 18;
@@ -44,8 +51,6 @@ abstract class ExceptionCodes {
     const E_CONTROLLER_CLASS_NOT_FOUND = 19;
 
     /** files */
-    const S_ROUTE_STATIC_FILE_NOTFOUND = "No se pudo localizar el archivo \"%s\" en la carpeta \"%s\".";
-    const E_ROUTE_STATIC_FILE_NOTFOUND = 21;
 
     
 }

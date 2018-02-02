@@ -50,6 +50,13 @@ class RouteUtils extends RouteCore {
     public static function serve($file, $baseDir = "public") {
         $filePath = "{$baseDir}/{$file}";
 
+        if ($file === "") {
+            throw new \Emotion\Exceptions\InternalException(
+                sprintf(ExceptionCodes::S_ROUTE_STATIC_FILE_EMPTY, $baseDir),
+                ExceptionCodes::E_ROUTE_STATIC_FILE_EMPTY
+            );
+        }
+
         if (!file_exists($filePath)) {
             throw new \Emotion\Exceptions\InternalException(
                 sprintf(ExceptionCodes::S_ROUTE_STATIC_FILE_NOTFOUND, $file, $baseDir),

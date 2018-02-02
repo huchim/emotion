@@ -8,7 +8,7 @@ class ConfigurationCore
     private $appStructureDirectory = null;    
     private $_customConfigurationJson = Array();
     private $basePath = "";
-    private $debugMode = false;
+    private $debugMode = true;
 
     private function __construct() {
         $this->appStructureDirectory = new DirectoryConfiguration();

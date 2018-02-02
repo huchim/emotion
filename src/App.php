@@ -4,7 +4,7 @@ use Emotion\Routes\RouteController;
 use Emotion\Exceptions\ExceptionCodes;
 use Emotion\Configuration\ConfigurationCore;
 
-class Core extends RouteController {
+class App extends RouteController {
     /**
      * Configuración
      *
@@ -12,17 +12,25 @@ class Core extends RouteController {
      */
     private $configuration = null;
     protected static $instance = null;
-    private $routeResult = null;
-
     public $info = array();
+    private $routeResult = null;
+    private static $initialized = false;
 
     protected function __construct() {
-        parent::__construct();
+        self::log("Recuperando configuración de la aplicación.");
         $this->configuration = ConfigurationCore::getInstance();
+
+        self::log("Inicializando aplicación.");
         $this->init();
     }
 
     public function init() {
+        if (self::$initialized) {
+            return;
+        }
+
+        self::$initialized = true;
+
         // Unir la configuración de la aplicación.
         $this->info = array_merge(
             JsonConfig::tryGetJson("package.json"),
@@ -98,6 +106,7 @@ class Core extends RouteController {
         $config = \Emotion\Configuration\ConfigurationCore::getInstance();
 
         if ($config->isDebug()) {
+            // throw new \Exception("No se permite debug en pruebas");
             file_put_contents('php://stderr', $message . "\n");
         }
     }
@@ -153,10 +162,12 @@ class Core extends RouteController {
                 ExceptionCodes::E_ROUTER_INVALID);
         }
 
+        self::log("Recuperando lista de rutas definidas.");
         $routesList = $router->getRoutes();
 
         // Si no se ha configurado ninguna ruta, agrego las predeterminadas:
         if (count($routesList) === 0) {
+            self::log("No existe ninguna ruta definida, se agregarán las predeterminadas.");
             Core::addStaticFiles();
             Core::addMvcApi();
             Core::addMvc();
