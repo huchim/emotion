@@ -1,5 +1,8 @@
 <?php namespace Emotion\Routes;
 
+use \Emotion\Configuration\ConfigurationCore;
+use \Emotion\Exceptions\ExceptionCodes;
+
 class RouteUtils extends RouteCore {
     private static $routerBaseUrl = "";
 
@@ -46,6 +49,14 @@ class RouteUtils extends RouteCore {
 
     public static function serve($file, $baseDir = "public") {
         $filePath = "{$baseDir}/{$file}";
+
+        if (!file_exists($filePath)) {
+            throw new \Emotion\Exceptions\InternalException(
+                sprintf(ExceptionCodes::S_ROUTE_STATIC_FILE_NOTFOUND, $file, $baseDir),
+                ExceptionCodes::E_ROUTE_STATIC_FILE_NOTFOUND
+            );
+        }
+
         $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
         $mimesSupported = array(
             "css" => " 	text/css",
@@ -63,9 +74,21 @@ class RouteUtils extends RouteCore {
             $selectedMime = $mimesSupported[$fileExtension];
         }
 
-        // Enviar el encabezado correcto.
-        header("Content-Type: {$selectedMime}");
+        $contentTypeHeader = "Content-Type: {$selectedMime}";
 
+        try
+        {
+            // Enviar el encabezado correcto.
+            header($contentTypeHeader);
+        } catch (\Exception $ex)
+        {
+            throw new \Emotion\Exceptions\InternalException(
+                sprintf(ExceptionCodes::S_RESPONSE_HEADER_ERROR, $contentTypeHeader),
+                ExceptionCodes::E_RESPONSE_HEADER_ERROR,
+                $ex
+            );
+        }
+        
         // Enviar el contenido al navegador.
         echo file_get_contents($filePath);
     }

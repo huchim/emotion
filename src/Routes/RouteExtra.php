@@ -89,6 +89,12 @@ class RouteExtra extends RouteUtils {
         $folderName,
         $routeRules,
         $routeName) {
+            // Localizar la ruta principal de la aplicación.
+            $root = ConfigurationCore::getSourceDirectory();
+            
+            // Ajustar la ruta para que considere bien la carpeta.
+            $folderName = "{$root}/{$folderName}";
+
             // Configurar correctamente la regla.
             $rules = self::formatRouteRule($routeRules);
             self::map( "GET", $rules, function($publicFile) use ($folderName) {
