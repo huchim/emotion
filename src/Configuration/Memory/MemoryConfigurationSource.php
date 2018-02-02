@@ -1,4 +1,4 @@
-<?php namespace Emotion\Configuration\Json;
+<?php namespace Emotion\Configuration\Memory;
 
 use \Emotion\Contracts\Configuration\IConfigurationProvider;
 use \Emotion\Contracts\Configuration\IConfigurationBuilder;

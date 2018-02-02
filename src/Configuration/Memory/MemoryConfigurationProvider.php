@@ -1,4 +1,4 @@
-<?php namespace Emotion\Configuration\Json;
+<?php namespace Emotion\Configuration\Memory;
 
 use \Emotion\Contracts\Configuration\IConfigurationProvider;
 
@@ -20,7 +20,7 @@ class MemoryConfigurationProvider implements IConfigurationProvider {
         $this->source = $source;
     }
 
-    public function load() {
+    public function load($reload = false) {
         $this->data = $this->source->config;
     }
 
