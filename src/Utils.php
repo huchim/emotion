@@ -17,4 +17,21 @@ abstract class Utils {
             }
         });
     }
+
+    public static function combinePaths($path1, $path2 = "") {
+        // Eliminar diagonal final.
+        if(substr($path1, -1) === '/') {
+            $path1 = substr($path1, 0, -1);
+        }
+
+        if(substr($path2, 0, 1) === '/') {
+            $path2 = substr($path2, 1);
+        }
+
+        if ($path2 !== "" && $path1 != "") {
+            $path2 = "/{$path2}";
+        }
+
+        return $path1 . $path2;
+    }
 }

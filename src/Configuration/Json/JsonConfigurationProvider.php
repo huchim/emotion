@@ -4,6 +4,12 @@ use \Emotion\Configuration\File\FileConfigurationProvider;
 
 class JsonConfigurationProvider extends FileConfigurationProvider {
     private $data = [];
+    /**
+     * Undocumented variable
+     *
+     * @var \Emotion\Contracts\ILogger
+     */
+    private $logger = null;
 
     /**
      * Undocumented function
@@ -12,17 +18,20 @@ class JsonConfigurationProvider extends FileConfigurationProvider {
      */
     public function __construct(JsonConfigurationSource $source) {
         parent::__construct($source);
+        $this->logger = new \Emotion\Loggers\Logger(self::class);
     }
 
     public function load($reload = false) {
         parent::load($reload);
 
-        // Analizar datos.
+        $this->logger->debug(0, "Recuperando contenido del archivo.");
         $raw = $this->getContent();
 
         if ($raw === "") {
+            $this->logger->warn(0, "El archivo esta vacío.");
             $raw = [];
         } else {
+            $this->logger->debug(0, "Convirtiendo a arreglo.");
             $this->data = json_decode($raw, true);
         }
     }

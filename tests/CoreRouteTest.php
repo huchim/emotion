@@ -2,14 +2,31 @@
 include "CustomBootstrap.php";
 
 use PHPUnit\Framework\TestCase;
-use Emotion\Core;
-use Emotion\JsonConfig;
+use Emotion\App2;
+use Emotion\Core\Bootstrapper;
+//use Emotion\JsonConfig;
 use Emotion\Utils;
 use Emotion\HttpContext;
 use Emotion\Exceptions\ExceptionCodes;
 
+define("APP_DEBUG", true);
+
 class CoreRouteTest extends TestCase
 {
+    /**
+     * instancia de la aplicación.
+     *
+     * @var Emotion\App2
+     */
+    private static $app = null;
+
+    public static function setUpBeforeClass() {
+        // Core::clearRouter();
+        self::$app = new \Emotion\App2();
+        self::$app->setDirectoryBase("tests/");
+        self::$app->loadDefaultConfiguration();
+    }
+
     /**
      * Ocurre un error al intentar recuperar una cadena de conexión que no existe.
      *
@@ -17,7 +34,7 @@ class CoreRouteTest extends TestCase
      */
     public function testGetNullConnection() {
         $this->expectExceptionCode(ExceptionCodes::E_CONNECTIONS_MISSING);
-        $connection = Core::connectionStrings("test");
+        $connection = self::$app->connectionStrings("test");
     }
 
     /**
@@ -26,8 +43,7 @@ class CoreRouteTest extends TestCase
      * @return void
      */
     public function testGetConnection() {
-        //$this->expectExceptionCode(ExceptionCodes::E_CONNECTIONS_MISSING);
-        $actual = count(Core::connectionStrings("default"));
+        $actual = count(self::$app->connectionStrings("default"));
         $expected = 1;
         $this->assertGreaterThanOrEqual($expected, $actual);
     }
@@ -40,7 +56,7 @@ class CoreRouteTest extends TestCase
     public function testDatabaseInConnection() {
         $actual = false;
         $keys = ["database", "dbname", "db", "catalog", "initial catalog"];
-        $conn_keys = array_keys(Core::connectionStrings("default"));
+        $conn_keys = array_keys(self::$app->connectionStrings("default"));
 
         foreach ($keys as $key) {
             if (in_array($key, $conn_keys)) {
@@ -58,20 +74,20 @@ class CoreRouteTest extends TestCase
      * @return void
      */
     public function testGetDefaultSecurityHandler() {
-        $this->assertInstanceOf(\Emotion\Security\CookieUnSecure::class, Core::getCredentialRepository());
+        $this->assertInstanceOf(\Emotion\Security\CookieUnSecure::class, Bootstrapper::getCredentialRepository());
     }
 
     public function testRun() {
         $this->expectOutputString("Se ejecutó Index.");
         HttpContext::server("REQUEST_URI", "/Home");
-        Core::run();
+        self::$app->run();
     }
 
     public function testNotFoundRoute() {
         $this->expectExceptionCode(ExceptionCodes::E_ROUTER_NOT_FOUND);
         HttpContext::server("REQUEST_URI", "/foo/bar/foo/bar/foo");
-        Core::setRouterBase("");
-        Core::run();
+        self::$app->setRouterBase("");
+        self::$app->run();
     }
 
 
@@ -80,7 +96,7 @@ class CoreRouteTest extends TestCase
         HttpContext::server("REQUEST_URI", "/Foo/Home/?foo=1");
         
         try {
-            Core::run();
+            self::$app->run();
         } catch (\Exception $ex) {
             throw $ex->getPrevious();
         }
@@ -90,13 +106,9 @@ class CoreRouteTest extends TestCase
         $this->expectOutputString("Se ejecutó Index.");
         HttpContext::server("REQUEST_URI", "/base/Home/Index/?foo=bar");
         
-        Core::clearRouter();
-        Core::setRouterBase("/base/");
+        self::$app->clearRouter();
+        self::$app->setRouterBase("/base/");
 
-        Core::run();
-    }
-
-    public static function setUpBeforeClass() {
-        Core::clearRouter();
+        self::$app->run();
     }
 }

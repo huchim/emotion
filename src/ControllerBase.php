@@ -1,6 +1,7 @@
 <?php namespace Emotion;
 
-use \Emotion\Core as Core;
+use \Emotion\Core\Bootstrapper;
+use \Emotion\Contracts\Configuration\IConfigurationRoot;
 
 class ControllerBase implements IControllerBase {
 
@@ -12,6 +13,13 @@ class ControllerBase implements IControllerBase {
     private $appUser = null;
 
     /**
+     * Registro de eventos.
+     *
+     * @var \Emotion\Contracts\ILogger
+     */
+    private $logger = null;
+
+    /**
      * Infomración que será pasada a la vista.
      *
      * @var \Emotion\Views\ViewBag
@@ -19,16 +27,35 @@ class ControllerBase implements IControllerBase {
     public $ViewBag = null;
     private $currentControllerAction = "Index";
 
-    public function __construct() {
+    /**
+     * Undocumented variable
+     *
+     * @var \Emotion\Contracts\Configuration\IConfigurationRoot
+     */
+    private $configuration = null;
+
+    public function __construct(IConfigurationRoot $configuration = null) {
+        $this->logger = new \Emotion\Loggers\Logger(self::class);
+        $this->configuration = $configuration;
+
         // Leer del repositorio el usuario actual.
-        $this->appUser = $repo = Core::getCredentialRepository()->readUser();
+        $this->appUser = $repo = Bootstrapper::getCredentialRepository()->readUser();
         $authenticated = $this->appUser->isLogged();
 
         $this->ViewBag = new \Emotion\Views\ViewBag(array(
-            "app" => Core::info(), 
+            // "app" => Core::info(), 
             "authenticated" => $authenticated, 
             "currentUser" => $this->appUser,
         ));
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @return use \Emotion\Contracts\Configuration\IConfigurationRoot
+     */
+    protected function getConfiguration() {
+        return $this->configuration;
     }
 
     public function assign($key, $value) {
@@ -36,11 +63,18 @@ class ControllerBase implements IControllerBase {
     }
 
     public function run($actionName) {
-        Core::log("Este es el controlador que ejecutará {$actionName}");
+        $this->logger->debug(0, "Este es el controlador que ejecutará {$actionName}");
         $this->currentControllerAction = $actionName;
 
         // Recuperar la lista de parámetros
-        $method = new \ReflectionMethod(\get_class($this), $actionName);
+        try {
+            $method = new \ReflectionMethod(\get_class($this), $actionName);
+        }
+        catch (\Exception $ex) {
+            $this->logger->error(0, $ex);
+            throw $ex;
+        }        
+
         $params = $method->getParameters();
         $paramValues = array();
         $paramsOptions = array();
@@ -73,16 +107,16 @@ class ControllerBase implements IControllerBase {
         $output = null;
 
         if (count($paramValues) === 0) {
-            Core::log("La solicitud no contiene parámetros. Se va a ejecutar {$actionName}");
+            $this->logger->debug(0, "La solicitud no contiene parámetros. Se va a ejecutar {$actionName}");
             $output = $this->$actionName();
         } else {
-            Core::log("La solicitud se ejecutará con " . count($paramValues) . " parámetros.");
+            $this->logger->debug(0, "La solicitud se ejecutará con " . count($paramValues) . " parámetros.");
             $output = call_user_func_array(array($this, $actionName), $paramValues);
         }
     
-        Core::log("Ha finalizado la ejecución del controlador.");
+        $this->logger->debug(0, "Ha finalizado la ejecución del controlador.");
         if ($output === null) {
-            Core::log("El resultado es nulo, verifique que contiene la instrucción 'return \$this->View()'.");
+            $this->logger->warn(0, "El resultado es nulo, verifique que contiene la instrucción 'return \$this->View()'.");
             return new \Emotion\Responses\NoContentResponse();
         } else {
             return $output;
@@ -114,18 +148,18 @@ class ControllerBase implements IControllerBase {
     }
 
     public function Redirect($url) {
-        Core::log("Redirect:{$url}");
+        $this->logger->debug(0, "Redirect:{$url}");
         return new \Emotion\Responses\RedirectResponse($url);
     }
 
     public function RedirectToAction($controllerAction = "Index", $controllerName = "", $params = "") {
-        Core::log("RedirectToAction:{$controllerName}.{$controllerAction}");
+        $this->logger->debug(0, "RedirectToAction:{$controllerName}.{$controllerAction}");
         $url = \Emotion\Views\ViewHelpers::url("default", $controllerAction, $controllerName, $params);
         return $this->Redirect($url);
     }
 
     public function RedirectToRoute($routeName, $controllerAction = "Index", $controllerName = "", $params = "") {
-        Core::log("RedirectToRoute:{$routeName}{$controllerName}.{$controllerAction}");
+        $this->logger->debug(0, "RedirectToRoute:{$routeName}{$controllerName}.{$controllerAction}");
         $url = \Emotion\Views\ViewHelpers::url($routeName, $controllerAction, $controllerName, $params);
         return $this->Redirect($url);
     }

@@ -7,6 +7,12 @@ class FileConfigurationProvider implements IConfigurationProvider {
     private $path = "";
     private $content = "";
     private $loaded = false;
+    /**
+     * Undocumented variable
+     *
+     * @var \Emotion\Contracts\ILogger
+     */
+    private $logger = null;
 
     /**
      * Undocumented variable
@@ -22,6 +28,8 @@ class FileConfigurationProvider implements IConfigurationProvider {
      */
     public function __construct(FileConfigurationSource $source) {
         $this->source = $source;
+        $this->logger = new \Emotion\Loggers\Logger(self::class);
+        $this->logger->debug(0, "Recurso vinculado: " .  $this->source->fileProvider->getFileName());
     }
 
     public function setContent($content) {
@@ -35,6 +43,7 @@ class FileConfigurationProvider implements IConfigurationProvider {
 
     public function load($reload = false) {
         if ($this->loaded && !$reload) {
+            $this->logger->info(0, "El archivo ya ha sido cargado previamente.");
             return;
         }
 
@@ -44,10 +53,13 @@ class FileConfigurationProvider implements IConfigurationProvider {
 
         $file = $this->source->fileProvider;
 
-        if ($file->exists()) {
-            $content = $file->getContent();
-            $this->setContent($content);
+        if (!$file->exists()) {
+            $this->logger->info(0, "El archivo no existe.");
+            return;
         }
+
+        $content = $file->getContent();
+            $this->setContent($content);
     }
 
     public function set($key, $value) {

@@ -1,10 +1,20 @@
-<?php namespace Emotion\Routes;
+<?php namespace Emotion\Core\Routes;
 
-use \Emotion\Configuration\ConfigurationCore;
+use \Emotion\Core\RouteCore;
 use \Emotion\Exceptions\ExceptionCodes;
 
 class RouteUtils extends RouteCore {
-    private static $routerBaseUrl = "";
+    /**
+     * Undocumented variable
+     *
+     * @var \Emotion\Contracts\ILogger
+     */
+    private $logger = null;
+
+    public function __construct() {
+        parent::__construct();
+        $this->logger = new \Emotion\Loggers\Logger(self::class);
+    }
 
     /**
 	 * Map a route to a target
@@ -15,32 +25,32 @@ class RouteUtils extends RouteCore {
 	 * @param string $name Optional name of this route. Supply if you want to reverse route this url in your application.
 	 * @throws Exception
 	 */
-	public static function map($method, $route, $target, $name = null) {
-		self::getRouter()->map($method, $route, $target, $name);
+	public function map($method, $route, $target, $name = null) {
+		$this->getRouter()->map($method, $route, $target, $name);
     }
 
-    public static function setRouterBase($routerBaseUrl) {
-        self::$routerBaseUrl = $routerBaseUrl;
-        self::getRouter()->setBasePath(self::$routerBaseUrl);
+    public function setRouterBase($routerBaseUrl) {
+        parent::setRouterBase($routerBaseUrl);
+        $this->getRouter()->setBasePath($this->RouteUrlBase);
     }
 
-    public static function getRouterBase() {
-        return self::$routerBaseUrl;
-    }
-
-    public static function formatRouteRule($routeRule) {
+    public function formatRouteRule($routeRule) {
         // Hay que determinar si existe una base a la URL para
         // poder agregar el prefijo correctamente.
-        $routerBase = self::$routerBaseUrl;
+        $routerBase = $this->getRouterBase() ?? "";
         $startWithSlash = substr($routeRule, 0, 1) === "/";
+
+        $this->logger->debug(0, "URL Base: \"{$routerBase}\". " . ($startWithSlash ? "Inicia con diagonal" : "No inicia con diagonal."));
         
         if (!$startWithSlash && $routerBase === "") {
             // Si no existe una URL base, se debe comenzar con una barra diagonal.
+            $this->logger->debug(0, "La regla requiere de una diagonal al inicio.");
             $routeRule = "/{$routeRule}";
         }
 
         if ($startWithSlash && $routerBase !== "") {
             // Si existe una URL base, no se debe comenzar con una barra diagonal.
+            $this->logger->debug(0, "La regla no requiere una diagonal al inicio, se quitará.");
             $routeRule = substr($routeRule, 1);
         }
 

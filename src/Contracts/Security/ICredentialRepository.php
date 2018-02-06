@@ -1,4 +1,4 @@
-<?php namespace Emotion\Security;
+<?php namespace Emotion\Contracts\Security;
 
 interface ICredentialRepository {
     /**

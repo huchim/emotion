@@ -10,6 +10,12 @@ class HttpContext {
     private $__session = [];
     private $__env = [];
     private $__cookie = [];
+    /**
+     * Undocumented variable
+     *
+     * @var \Emotion\Contracts\ILogger
+     */
+    private $logger = null;
 
     private function __construct() {
         $this->__server = !isset($_SERVER) ? [] : $_SERVER;
@@ -20,6 +26,7 @@ class HttpContext {
         $this->__session = !isset($_SESSION) ? [] : $_SESSION;
         $this->__env = !isset($_ENV) ? [] : $_ENV;
         $this->__cookie = !isset($_COOKIE) ? [] : $_COOKIE;
+        $this->logger = new \Emotion\Loggers\Logger(self::class);
     }
 
     /**
@@ -59,7 +66,7 @@ class HttpContext {
         }
 
         if (isset($this->$var_type)) {
-            \Emotion\Core::log("Emulando {$nameOrData} = " . $value);
+            $this->logger->debug(0, "Emulando {$nameOrData} = " . $value);
             $this->$var_type[$nameOrData] = $value;
             return;
         }

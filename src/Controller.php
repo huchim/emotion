@@ -1,7 +1,8 @@
 <?php namespace Emotion;
 
 use \Emotion\Exceptions\ExceptionCodes;
-use \Emotion\Configuration\ConfigurationCore;
+use \Emotion\Contracts\Configuration\IConfigurationRoot;
+use \Emotion\Contracts\IReadOnlyAppState;
 
 class Controller {
     private $_config;
@@ -12,6 +13,13 @@ class Controller {
     private $controllerFolder = "";
 
     /**
+     * Registro de eventos.
+     *
+     * @var \Emotion\Contracts\ILogger
+     */
+    private $logger = null;
+
+    /**
      * @var \Emotion\IControllerBase
      */
     private $controllerInstance = null;
@@ -19,26 +27,14 @@ class Controller {
     public function __construct(
         $controllerName,
         $controllerAction = "Index",
-        $baseFolder = "") {
-        // Recuperar la estructura de directorios de la aplicación.
-        $this->_config = ConfigurationCore::getInstance()->getConfig();
-
-        if ($baseFolder === "") {
-            // Si no se pasa explicitamente un dirctorio raiz, se aplica el global.
-            $baseFolder = ConfigurationCore::getSourceDirectory();
-        }
-
-        if ($controllerName === "") {
-            $controllerName = $this->_config->controllerName;
-        }
-
-        if ($controllerAction === "") {
-            $controllerAction = $this->_config->controllerAction;
-        }
-        
+        $baseFolder = "") {        
         $this->_name = $controllerName;
         $this->action = $controllerAction;
         $this->baseFolder = $baseFolder;
+
+        // Crear registro de eventos.
+        $this->logger = new \Emotion\Loggers\Logger(self::class);
+        $this->logger->debug(0, "Controller: {$controllerName}.{$controllerAction} ({$baseFolder})");
     }
 
     public function getControllerName() {
@@ -49,7 +45,7 @@ class Controller {
         return $this->action;
     }
 
-    public function init() {
+    public function init(IConfigurationRoot $configuration = null) {
         if ($this->controllerInstance !== null) {
             throw new \Exception("La instancia de este controlador ha sido inicializada.");
         }
@@ -68,42 +64,42 @@ class Controller {
         
         // Crear la instancia a la clase.
         $controllerClassName = $this->getClassName();
-        $this->controllerInstance = new $controllerClassName();
+        $this->controllerInstance = new $controllerClassName($configuration);
     }
 
-    public function run($actionName = "") {
+    public function run($actionName = "", IReadOnlyAppState $appState = null) {
         if ($actionName === "") {
             $actionName = $this->action;
         }
 
         try {
-            $this->init();
+            $this->init($appState->getConfiguration());
 
-            Core::log("Ejecutando la acción {$actionName}");
+            $this->logger->debug(0, "Ejecutando la acción {$actionName}");
             $output = $this->controllerInstance->run($actionName);
             
             if (is_array($output)) {
-                Core::log("La respuesta es un arreglo y será convertido a JsonResponse");
+                $this->logger->debug(0, "La respuesta es un arreglo y será convertido a JsonResponse");
                 $output = new \Emotion\Responses\JsonResponse($output);
             }
             
             // En caso de no ser una instancia de BaseResponse la 
             // inicializo como una de ellas.
             if (!($output instanceof \Emotion\Responses\BaseResponse)) {
-                Core::log("La respuesta es desconocida, se tratará como HtmlResponse.");
+                $this->logger->warn(0, "La respuesta es desconocida, se tratará como HtmlResponse.");
                 $output = new \Emotion\Responses\RawResponse($output);
             }
         } catch (\Emotion\Exceptions\AuthException $ex) {
-            Core::log("El controlador arrojó un error de tipo AuthException.");
+            $this->logger->error(0, $ex);
             $output = new \Emotion\Responses\ErrorResponse(401, "Unauthorized", $ex);
         } catch (\Emotion\Exceptions\NotFoundException $ex) {
-            Core::log("El controlador arrojó un error de tipo NotFoundException.");
+            $this->logger->error(0, $ex);
             $output = new \Emotion\Responses\ErrorResponse(404, "Not Found", $ex);
         } catch (\Emotion\Exceptions\InternalException $ex) {
-            Core::log("El controlador arrojó un error de tipo InternalException.");
+            $this->logger->error(0, $ex);
             $output = new \Emotion\Responses\ErrorResponse(500, "Server Error", $ex);
         } catch (\Emotion\Exceptions\RedirectException $ex) {
-            Core::log("El controlador arrojó un error de tipo RedirectException.");
+            $this->logger->error(0, $ex);
             $output = new \Emotion\Responses\RedirectResponse($ex->getUrl());
         }
         

@@ -1,11 +1,20 @@
 <?php namespace Emotion\Views;
 
 use \League\Uri;
-use \Emotion\Core;
 use \Emotion\HttpContext;
+use \Emotion\Contracts\Configuration\IConfigurationRoot;
+use \Emotion\Contracts\IReadOnlyAppState;
 
 class ViewHelpers {
     private $uri = null;
+
+    /**
+     * Undocumented variable
+     *
+     * @var \Emotion\Contracts\IReadOnlyAppState
+     */
+    private $appState = null;
+
     /**
      * Instancia interna.
      *
@@ -13,51 +22,37 @@ class ViewHelpers {
      */
     protected static $instance = null;
 
-    public function __construct() {
+    public function __construct(IReadOnlyAppState $appState) {
         $this->uri = Uri\Http::createFromServer(HttpContext::server());
-    }
-
-    /**
-     * Devuelve una instancia única de la configuración.
-     *
-     * @return \Emotion\Views\ViewHelpers
-     */
-    public static function getInstance() {
-        if (!isset(static::$instance)) {
-            static::$instance = new static;
-        }
-
-        return static::$instance;
+        $this->appState = $appState;
     }
 
     public function registerFilters(\Twig_Environment $twigInstance) {
-        $twig_content_filter = new \Twig_SimpleFilter("content", "\Emotion\Views\ViewHelpers::content");
-        $twig_url_function = new \Twig_SimpleFunction("url", "\Emotion\Views\ViewHelpers::url");
+        $twig_content_filter = new \Twig_SimpleFilter("content", array($this, "content2"));
+        $twig_url_function = new \Twig_SimpleFunction("url", array($this, "url"));
 
         $twigInstance->addFilter($twig_content_filter);
         $twigInstance->addFunction($twig_url_function);
     }
 
-    public static function content($fileName) {
-        $instance = \Emotion\Views\ViewHelpers::getInstance();
-        $config = \Emotion\Configuration\CoreConfiguration::getInstance();
-        $appBasePath = Core::getRouterBase();
-
+    public function content2($fileName) {
+        $appBasePath = $this->appState->getConfiguration()->getValue("RouteUrlBase");
+        
         if (isset($_SERVER["SERVER_SOFTWARE"])) {
             $isDevServer = strpos($_SERVER["SERVER_SOFTWARE"], "Development") !== false;            
             $host = $_SERVER["SERVER_NAME"];
             $port = $_SERVER["SERVER_PORT"] == "80" ? "" : ":" . $_SERVER["SERVER_PORT"]; 
             if ($isDevServer) {
-                return "http://{$host}{$port}{$appBasePath}{$fileName}";
+                return "http://{$host}{$port}/{$appBasePath}{$fileName}";
             }
         }
         
-        $requestUri = str_replace($appBasePath, "", $_SERVER["REQUEST_URI"]);
-        $uri = str_replace($requestUri, "", $instance->uri->__toString());
-        return $uri . str_replace("~/", "", $fileName);
+        $requestUri = str_replace($appBasePath, "", HttpContext::server("REQUEST_URI"));
+        $uri = str_replace($requestUri, "", $this->uri->__toString());
+        return $uri . "/" . str_replace("~/", "", $fileName);
     }
 
-    public static function url($routeName, $controllerAction = "Index", $controllerName = "", $params = "") {
+    public function url($routeName, $controllerAction = "Index", $controllerName = "", $params = "") {
         if ($params == "" && substr($controllerName, 0, 1) === "?") {
             $params = $controllerName;
             $controllerName = "";
@@ -68,17 +63,16 @@ class ViewHelpers {
         }
 
         // Crear instancia del enrutador global.
-        $core = Core::getInstance();
-        $config = $core->getConfig();
-        $router = $core->getRouter();
-        $match = $core->getRouterResults();
+        $config = $this->appState->getConfiguration();
+        $router = $this->appState->getRouter();
+        $match  = $this->appState->getRouterResults();
 
         // Asignar valores predeterminados.
         if ($controllerName === "") {
             if (isset($params["controllerName"])) {
                 $controllerName = $match["controllerName"];
             } else {
-                $controllerName = $config->controllerName;
+                $controllerName = $config->getValue("controllerName");
             }
         }
 
@@ -86,7 +80,7 @@ class ViewHelpers {
             if (isset($params["controllerAction"])) {
                 $controllerAction = $match["controllerAction"];
             } else {
-                $controllerAction = $config->controllerAction;
+                $controllerAction = $config->getValue("controllerAction");
             }
         }
         

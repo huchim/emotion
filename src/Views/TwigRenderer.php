@@ -1,5 +1,7 @@
 <?php namespace Emotion\Views;
 
+use \Emotion\Contracts\IReadOnlyAppState;
+
 class TwigRenderer implements IViewEngine {
     /**
      * Controlador a ejecutar.
@@ -17,8 +19,16 @@ class TwigRenderer implements IViewEngine {
      */
     private $helper = null;
 
-    public function __construct() {
-        $this->helper = new \Emotion\Views\ViewHelpers();
+    /**
+     * Undocumented variable
+     *
+     * @var \Emotion\Contracts\IReadOnlyAppState
+     */
+    private $appState = null;
+
+    public function __construct(IReadOnlyAppState $appState) {
+        $this->appState = $configuration;
+        $this->helper = new \Emotion\Views\ViewHelpers($appState);
     }
 
     public function setController(\Emotion\Controller $controller) {

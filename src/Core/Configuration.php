@@ -1,51 +1,108 @@
-<?php namespace Emotion\Core\Configuration;
+<?php namespace Emotion\Core;
+
+use \Emotion\Contracts\Configuration\IConfigurationRoot;
+use \Emotion\Contracts\Configuration\IConfigurationSource;
+use \Emotion\Contracts\Configuration\IConfigurationBuilder;
+use \Emotion\Exceptions\ExceptionCodes;
 
 class Configuration {
     /**
-     * Configuración
+     * Undocumented variable
      *
-     * @var \Emotion\Configuration\ConfigurationCore
+     * @var \Emotion\Contracts\ILogger
      */
-    private $configuration = null;
-    
-    public function init() {
-        // Unir la configuración de la aplicación.
-        $this->info = array_merge(
-            JsonConfig::tryGetJson("package.json"),
-            JsonConfig::tryGetJson("app.json"));
-            
-        // Actualizar la configuración desde el arreglo.
-        $this->configuration->loadConfigFromArray($this->info);
+    private $logger = null;
 
-        if (isset($this->info["basePath"])) {
-            self::setRouterBase($this->info["basePath"]);
+    /**
+     * Configuración de la aplicación.
+     *
+     * @var \Emotion\Contracts\Configuration\IConfigurationRoot
+     */
+    public $configuration = null;
+
+    /**
+     * Obtiene o establece la carpeta base de la aplicación.
+     *
+     * @var string
+     */
+    public $DirectoryBase = "";
+
+    /**
+     * Obtiene o establece la carpeta base de la URL.
+     *
+     * @var string
+     */
+    public $RouteUrlBase = "";
+
+    /**
+     * Undocumented variable
+     *
+     * @var \Emotion\Contracts\Configuration\IConfigurationBuilder
+     */
+    private $configurationBuilder = null;
+
+    public function __construct() {
+        $this->logger = new \Emotion\Loggers\Logger(self::class);
+
+        // Inicializar configuración.
+        $this->configurationBuilder = new \Emotion\Configuration\ConfigurationBuilder();
+        $this->buildConfiguration();
+    }
+
+    /**
+     * Configura el directorio raiz de la aplicación.
+     *
+     * @param string $directoryBase Directorio raiz de la aplicación.
+     * @return void
+     */
+    public function setDirectoryBase($directoryBase) {
+        $this->DirectoryBase = $directoryBase;
+    }
+
+    public function setRouterBase($routerBaseUrl) {
+        $this->RouteUrlBase = $routerBaseUrl;
+
+        // Esto ayuda a que se sepa de manera general
+        $this->configuration->updateValue("RouteUrlBase", $this->RouteUrlBase);
+    }
+
+    public function getRouterBase() {
+        return $this->configuration->getValue("RouteUrlBase");
+    }
+
+    public function buildConfiguration() {
+        $this->configuration = $this->configurationBuilder->build();
+    }
+
+    public function addConfigurationSource(IConfigurationSource $source) {
+        $this->configurationBuilder->add($source);
+    }
+
+    /**
+     * Obtiene la configuración de la aplicación.
+     *
+     * @return \Emotion\Contracts\Configuration\IConfigurationRoot
+     */
+    public function getConfiguration() {
+        return $this->configuration;
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param \Emotion\Contracts\Configuration\IConfigurationSource[] $sources
+     * @return void
+     */
+    public function loadConfigurationSources($sources = array()) {
+        if ($sources == null) {
+            throw new \Exception("La lista de origenes de configuración es nula.");
         }
-    }
 
-    public static function getConfigurationObject() {
-        $self = self::getInstance();
-        return $self->configuration;
-    }
-
-    public static function loadConfig($fileName) {
-        // Actualiza la configuración.
-        $configuration = Core::getConfigurationObject();
-        $configuration->loadConfig($fileName);
-        $self->init();
-    }
-
-    public static function info() {
-        return Core::getInstance()->info;
-    }
-
-    public static function get($option) {
-        $self = Core::getInstance();
-
-        if (isset($self->info[$option])) {
-            return $self->info[$option];
+        foreach ($sources as $source) {
+            $this->addConfigurationSource($source);
         }
 
-        return "";
+        $this->buildConfiguration();
     }
 
     /**
@@ -54,33 +111,8 @@ class Configuration {
      * @param string $connectionName Nombre de la conexión.
      * @return array
      */
-    public static function connectionStrings($connectionName) {
-        $connections = Core::get("connectionStrings");
-
-        if (!is_array($connections)) {
-            throw new \Exception(ExceptionCodes::S_CONNECTIONS_EMPTY, ExceptionCodes::E_CONNECTIONS_EMPTY);
-        }
-
-        if (!isset($connections[$connectionName])) {
-            throw new \Exception(ExceptionCodes::S_CONNECTIONS_MISSING, ExceptionCodes::E_CONNECTIONS_MISSING);
-        }
-
-        $connectionParts = explode(";", $connections[$connectionName]);
-        $connectionOptions = [];
-
-        foreach ($connectionParts as $connectionOption) {
-            $options = explode("=", $connectionOption);
-
-            if (count($options) !== 2) {
-                // Esta sección en la cadena no representa un patrón clave-valor.
-                continue;
-            }
-
-            $optionName = strtolower($options[0]);
-            $optionValue = $options[1];
-            $connectionOptions[$optionName] = $optionValue;
-        }
-        
-        return $connectionOptions;
+    public function connectionStrings($connectionName) {
+        $this->logger->debug(0, "Recuperando información de la cadena de conexión {$connectionName}");
+        return $this->configuration->getConnectionString($connectionName);
     }
 }

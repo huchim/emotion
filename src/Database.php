@@ -2,11 +2,37 @@
 
 use Aura\Sql\ExtendedPdo;
 use \Emotion\Core;
+use \Emotion\Contracts\Database\IDatabase;
+use \Emotion\Contracts\Configuration\IConfigurationRoot;
 
-class Database {
-    protected static $instance = null;
+class Database implements IDatabase {
+    protected $instance = null;
+
+    /**
+     * Undocumented variable
+     *
+     * @var \Emotion\Contracts\Configuration\IConfigurationRoot
+     */
+    private $configuration = null;
+
+    /**
+     * Undocumented variable
+     *
+     * @var \Emotion\Contracts\ILogger
+     */
+    private $logger = null;
     private $connections = [];
     private $defaultDriver = "sqlsrv";
+
+    /**
+     * Undocumented function
+     *
+     * @param \Emotion\Contracts\Configuration\IConfigurationRoot $configuration
+     */
+    public function __construct(IConfigurationRoot $configuration) {
+        $this->configuration = $configuration;
+        $this->logger = new \Emotion\Loggers\Logger(self::class);
+    }
 
     /**
      * Devuelve la conexión a la base de datos.
@@ -20,11 +46,13 @@ class Database {
         }
 
         // Crear la instancia si no existe.
-        $connectionOptions = Core::connectionStrings($connectionName);
+        $connectionOptions = $this->configuration->getConnectionString($connectionName);
+
         $server = $connectionOptions["server"];
         $database = $connectionOptions["database"];
         $driver = $this->defaultDriver;
 
+        $this->logger->debug(0, "Creando conexión de tipo: {$connectionName}");
         $this->connections[$connectionName] = new ExtendedPdo(
             "{$driver}:server={$server};database={$database}",
             $connectionOptions["uid"],
@@ -34,30 +62,15 @@ class Database {
         return $this->connections[$connectionName];;
     }
 
-    public static function connect($connectionName) {
-        $self = Database::getInstance();
-        return $self->getConnection($connectionName);
+    public function connect($connectionName) {
+        return $this->getConnection($connectionName);
     }
 
-    public static function query($connectionName, $query, $params = array()) {
-        $connection = Database::connect($connectionName);
+    public function query($connectionName, $query, $params = array()) {
+        $connection = $this->connect($connectionName);
         $sth = $connection->prepare($query);
         $sth->execute($params);
 
         return $sth->fetchAll(\PDO::FETCH_ASSOC);;
     }
-
-    /**
-     * Devuelve una instancia única de la configuración.
-     *
-     * @return Database
-     */
-    public static function getInstance() {
-        if (!isset(static::$instance)) {
-            static::$instance = new static;
-        }
-
-        return static::$instance;
-    }
-
 }

@@ -14,6 +14,21 @@ use \Emotion\Configuration\Memory\MemoryConfigurationSource;
 
 class ConfigTest extends TestCase
 {
+    public function testInnerArray() {
+        // Genero un nuevo objeto de configuración y le asigno un arreglo complejo.
+        $source = new MemoryConfigurationSource();
+        $source->config = array("a" => array("b" => 1));
+
+        // La agrego al constructor.
+        $builder = new ConfigurationBuilder();
+        $builder->add($source);
+
+        // Genero la configuración.
+        $configRoot = $builder->build();
+
+        $this->assertEquals(array("b" => 1), $configRoot->getValue("a"));
+    }
+
     public function testInit() {
         $fi = new MockFileProvider("{\"a\": 1}");
 

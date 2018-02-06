@@ -1,18 +1,29 @@
 <?php namespace Emotion\Security;
 
-use Emotion\Core;
+// use Emotion\Core;
 use Emotion\HttpContext;
 use Emotion\Exceptions\ExceptionCodes;
 use Emotion\Exceptions\CredentialException;
 use Emotion\Exceptions\RequiredClaimException;
+use \Emotion\Contracts\Security\ICredentialRepository;
 
 class CookieUnSecure implements ICredentialRepository {
+    /**
+     * Registro de eventos.
+     *
+     * @var \Emotion\Contracts\ILogger
+     */
+    private $logger = null;
     private $credentials = [];
     private $cookieName = "user";
     private $defaultPassword = "-huchim-";
 
     // $setuid:$setusername:$setpass:$usk:$pass:$setusertype:$setdisplayname:$setgroupname
     protected $customClaims = array("sub", "preferred_username", "password", "validation", "role", "name", "group");
+
+    public function __construct() {
+        $this->logger = new \Emotion\Loggers\Logger(self::class);
+    }
 
     public function clearUser() {
         $this->clearCookie();
@@ -22,12 +33,12 @@ class CookieUnSecure implements ICredentialRepository {
      * @inheritDoc
      */
     public function readUser() {
-        Core::log("-----");
-        Core::log("Leyendo información del usuario en la memoria.");
+        $this->logger->debug(0, "-----");
+        $this->logger->debug(0, "Leyendo información del usuario en la memoria.");
         $this->readCookie();
 
-        Core::log("Construyendo lista de atributos...");
-        Core::log("Existen ". count($this->credentials) . " opciones en las credenciales actuales.");
+        $this->logger->debug(0, "Construyendo lista de atributos...");
+        $this->logger->debug(0, "Existen ". count($this->credentials) . " opciones en las credenciales actuales.");
 
         if (count($this->credentials) === 0) {
             return new \Emotion\AppUser();
@@ -45,7 +56,7 @@ class CookieUnSecure implements ICredentialRepository {
             "password" => $this->defaultPassword,
         );
 
-        Core::log("Existen ". count($standardOptions) . " opciones estándar y " . count($customOptions) . " personalizadas.");
+        $this->logger->debug(0, "Existen ". count($standardOptions) . " opciones estándar y " . count($customOptions) . " personalizadas.");
         return new \Emotion\AppUser($standardOptions, $customOptions);
     }
 
@@ -64,8 +75,8 @@ class CookieUnSecure implements ICredentialRepository {
     }
 
     private function internalWriteUser(\Emotion\AppUser $user) {
-        Core::log("-----");
-        Core::log("Escribiendo información del usuario en la memoria.");
+        $this->logger->debug(0, "-----");
+        $this->logger->debug(0, "Escribiendo información del usuario en la memoria.");
 
         if ($user->getClaim("password") !== $this->defaultPassword) {
             throw new CredentialException(ExceptionCodes::S_CLAIM_PASSWORD, ExceptionCodes::E_CLAIM_PASSWORD);
@@ -118,16 +129,16 @@ class CookieUnSecure implements ICredentialRepository {
     }
 
     private function clearCookie() {
-        Core::log("Eliminando la cookie, el navegador no la tomará en cuenta en la siguiente solicitud.");
+        $this->logger->debug(0, "Eliminando la cookie, el navegador no la tomará en cuenta en la siguiente solicitud.");
         $this->credentials = array();
 
         HttpContext::unsetCookie($this->cookieName);
     }
 
     private function isValidCookie($cookie) {
-        Core::log("Validando cookie");
+        $this->logger->debug(0, "Validando cookie");
         if ($cookie[0] === "") {
-            Core::log("La cookie no contiene el identificador en el primer índice.");
+            $this->logger->debug(0, "La cookie no contiene el identificador en el primer índice.");
             return false;
         }
 
@@ -135,12 +146,12 @@ class CookieUnSecure implements ICredentialRepository {
         $cookieValidationKey = $cookie[3];
         $cookieValidationCompareKey = md5($cookie[1] . $cookie[4] . $token . $cookie[5]);
 
-        Core::log("Comparando {$cookieValidationKey} con {$cookieValidationCompareKey}");
+        $this->logger->debug(0, "Comparando {$cookieValidationKey} con {$cookieValidationCompareKey}");
         return $cookieValidationKey === $cookieValidationCompareKey;
     }
 
     private function readCookieContent($cookieContent) {
-        Core::log("Decodificando el contenido de la cookie.");
+        $this->logger->debug(0, "Decodificando el contenido de la cookie.");
         $cookieContent = base64_decode($cookieContent);
         $cookieContent = addslashes($cookieContent);
         $cookieContent = htmlentities($cookieContent, ENT_QUOTES);
@@ -149,11 +160,11 @@ class CookieUnSecure implements ICredentialRepository {
     }
 
     private function readCookie() {
-        Core::log("Leyendo información desde una cookie");
+        $this->logger->debug(0, "Leyendo información desde una cookie");
         $cookie = HttpContext::cookie($this->cookieName);
 
         if ($cookie === null) {
-            Core::log("No existe la cookie de usuario en el sistema.");
+            $this->logger->info(0, "No existe la cookie de usuario en el sistema.");
             return;
         }
 

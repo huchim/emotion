@@ -1,18 +1,10 @@
 <?php
 
-use Emotion\JsonConfig;
 use Emotion\HttpContext;
 use Emotion\Utils;
 
 // Interceptar los errores de la aplicación.
 Utils::registerErrorHandler();
-
-JsonConfig::addStreamReader("json", function($fileName) {
-    // Todos los archivos se recuperaran de la carpeta "tests".
-    $currentDir = dirname(__FILE__);
-    $fileName = $currentDir."/".$fileName;            
-    return json_decode(\file_get_contents($fileName), true);
-});
 
 \Emotion\HttpContext::server([
     "REMOTE_ADDR" => "127.0.0.1",
@@ -27,6 +19,6 @@ JsonConfig::addStreamReader("json", function($fileName) {
     "HTTP_CONNECTION'" => "keep-alive",
     
     "SCRIPT_FILENAME" => "tests/index.php",
-    "QUERY_STRING" => "foo=1",
+    
     "REQUEST_METHOD" => "GET",
 ], null);

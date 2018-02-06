@@ -1,13 +1,45 @@
 <?php namespace Emotion\Core;
 
-class Bootstrapper extends Configuration {
-    public static function log($message) {
-        // TODO: Deshabilitar cuando no sea necesario.
-        $config = self::getConfigurationObject();
+use \Emotion\Core\Routes\RouteExtra;
 
-        if ($config->isDebug()) {
-            // throw new \Exception("No se permite debug en pruebas");
-            file_put_contents('php://stderr', $message . "\n");
-        }
+class Bootstrapper extends RouteExtra {
+    /**
+     * Undocumented variable
+     *
+     * @var \Emotion\Contracts\ILogger
+     */
+    private $logger = null;
+
+    public function __construct() {
+        parent::__construct();
+        $this->logger = new \Emotion\Loggers\Logger(self::class);
+    }
+
+    public function loadDefaultConfiguration() {
+        $this->logger->info(0, "Cargando configuración predeterminada.");
+
+        // Carga la configuración inicial requerida.
+        $this->loadConfigurationArray([
+            "debug" => false,
+            "src" => "",
+            "mvc" => "app",
+            "api" => "",
+            "controllerName" => "Home",
+            "controllerAction" => "Index",
+        ]);
+
+        $this->loadConfigurationJsonFiles(["package.json", "app.json"]);
+
+        // Genera la confuración.
+        $this->buildConfiguration();
+    }
+
+    /**
+     * Devuelve el encargado de administrar la sesión del usuario.
+     *
+     * @return \Emotion\Security\ICredentialRepository
+     */
+    public static function getCredentialRepository() {
+        return new \Emotion\Security\CookieUnSecure();
     }
 }
