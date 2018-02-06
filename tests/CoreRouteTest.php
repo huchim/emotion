@@ -2,7 +2,6 @@
 include "CustomBootstrap.php";
 
 use PHPUnit\Framework\TestCase;
-use Emotion\App2;
 use Emotion\Core\Bootstrapper;
 //use Emotion\JsonConfig;
 use Emotion\Utils;
@@ -22,7 +21,7 @@ class CoreRouteTest extends TestCase
 
     public static function setUpBeforeClass() {
         // Core::clearRouter();
-        self::$app = new \Emotion\App2();
+        self::$app = new \Emotion\App();
         self::$app->setDirectoryBase("tests/");
         self::$app->loadDefaultConfiguration();
     }

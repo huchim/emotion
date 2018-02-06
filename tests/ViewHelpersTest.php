@@ -20,7 +20,7 @@ class ViewHelpersTest extends TestCase
     public function setUp() {
         if (!defined("APP_DEBUG")) define("APP_DEBUG", true);
 
-        self::$app = new \Emotion\App2();
+        self::$app = new \Emotion\App();
         self::$app->setDirectoryBase("tests/");
         self::$app->loadDefaultConfiguration();     
         self::$app->addMvc();

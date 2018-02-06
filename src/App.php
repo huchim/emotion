@@ -5,7 +5,7 @@ use Emotion\Core\Bootstrapper;
 use \Emotion\Contracts\Configuration\IConfigurationRoot;
 use \Emotion\Contracts\IReadOnlyAppState;
 
-class App2 extends Bootstrapper implements IReadOnlyAppState {
+class App extends Bootstrapper implements IReadOnlyAppState {
     /**
      * Undocumented variable
      *
