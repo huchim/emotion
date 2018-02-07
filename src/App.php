@@ -2,7 +2,6 @@
 
 use Emotion\Exceptions\ExceptionCodes;
 use Emotion\Core\Bootstrapper;
-use \Emotion\Contracts\Configuration\IConfigurationRoot;
 use \Emotion\Contracts\IReadOnlyAppState;
 
 class App extends Bootstrapper implements IReadOnlyAppState {
@@ -16,6 +15,14 @@ class App extends Bootstrapper implements IReadOnlyAppState {
     public function __construct() {
         parent::__construct();
         $this->logger = new \Emotion\Loggers\Logger(self::class);
+        
+        $currentScriptName = HttpContext::server('SCRIPT_FILENAME') ?? "";
+        
+        if ($currentScriptName != "") {
+            $dirRoot = Utils::normalizePath(realpath(dirname($currentScriptName)));
+            $this->logger->info(0, "Estableciendo directorio: {$dirRoot}");
+            $this->setDirectoryBase($dirRoot);
+        }
     }
 
     public function run() {

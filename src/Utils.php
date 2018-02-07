@@ -17,6 +17,31 @@ abstract class Utils {
             }
         });
     }
+    
+    public static function getMimeType($filePath, $defaultMime = "text/plain") {
+        $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
+        $mimesSupported = array(
+            "css" => " 	text/css",
+            "png" => "image/png",
+            "gif" => "image/gif",
+            "jpg" => "image/jpeg",
+            "js" => "application/x-javascript",
+            "txt" => "text/plain",
+            "html" => "text/html",
+        );
+
+        $selectedMime = $defaultMime;
+
+        if (isset($mimesSupported[$fileExtension])) {
+            $selectedMime = $mimesSupported[$fileExtension];
+        }
+        
+        return $selectedMime;
+    }
+    
+    public static function normalizePath($path) {
+        return self::combinePaths($path) . "/";
+    }
 
     public static function combinePaths($path1, $path2 = "") {
         // Eliminar diagonal final.

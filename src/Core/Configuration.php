@@ -58,6 +58,10 @@ class Configuration {
     public function setDirectoryBase($directoryBase) {
         $this->DirectoryBase = $directoryBase;
     }
+    
+    public function getDirectoryBase() {
+        return $this->DirectoryBase;
+    }
 
     public function setRouterBase($routerBaseUrl) {
         $this->RouteUrlBase = $routerBaseUrl;

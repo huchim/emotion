@@ -181,21 +181,21 @@ class RouteExtra extends RouteUtils {
         $routeName,
         $defaultDocument = null) {
             // Localizar la ruta principal de la aplicación.
-            $root = $this->configuration->getValue("src");
+            $root = $this->getDirectoryBase();
             
             // Ajustar la ruta para que considere bien la carpeta.
-            $folderName = "{$root}/{$folderName}";
+            $folderLocation = "{$root}/{$folderName}";
 
             // Configurar correctamente la regla.
             $rules = $this->formatRouteRule($routeRules);
 
-            $this->logger->debug(0, "Agregando una ruta estática al ruteador. Regla: " . $rules . ", folder: " . $folderName);
+            $this->logger->debug(0, "Agregando una ruta estática al ruteador. Regla: " . $rules . ", folder: " . $folderLocation);
 
-            $this->map("GET", $rules, function($publicFile = null) use ($folderName, $defaultDocument) {
+            $this->map("GET", $rules, function($publicFile = null) use ($folderLocation, $defaultDocument) {
                 if ($publicFile == null && $defaultDocument == null) {
                     // No se permite no pasar el nombre del archivo cuando no hay un documento predeterminado.
                     throw new \Emotion\Exceptions\InternalException(
-                        sprintf(ExceptionCodes::S_ROUTE_STATIC_FILE_EMPTY, $baseDir),
+                        sprintf(ExceptionCodes::S_ROUTE_STATIC_FILE_EMPTY, $folderLocation),
                         ExceptionCodes::E_ROUTE_STATIC_FILE_EMPTY
                     );
                 }
@@ -205,7 +205,7 @@ class RouteExtra extends RouteUtils {
                     $publicFile = $defaultDocument;
                 }
 
-                RouteUtils::serve($publicFile, $folderName);
+                RouteUtils::serve($publicFile, $folderLocation);
             }, $routeName);
     }
 }

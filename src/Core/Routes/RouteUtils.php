@@ -2,6 +2,7 @@
 
 use \Emotion\Core\RouteCore;
 use \Emotion\Exceptions\ExceptionCodes;
+use \Emotion\Utils;
 
 class RouteUtils extends RouteCore {
     /**
@@ -17,16 +18,16 @@ class RouteUtils extends RouteCore {
     }
 
     /**
-	 * Map a route to a target
-	 *
-	 * @param string $method One of 5 HTTP Methods, or a pipe-separated list of multiple HTTP Methods (GET|POST|PATCH|PUT|DELETE)
-	 * @param string $route The route regex, custom regex must start with an @. You can use multiple pre-set regex filters, like [i:id]
-	 * @param mixed $target The target where this route should point to. Can be anything.
-	 * @param string $name Optional name of this route. Supply if you want to reverse route this url in your application.
-	 * @throws Exception
-	 */
-	public function map($method, $route, $target, $name = null) {
-		$this->getRouter()->map($method, $route, $target, $name);
+     * Map a route to a target
+     *
+     * @param string $method One of 5 HTTP Methods, or a pipe-separated list of multiple HTTP Methods (GET|POST|PATCH|PUT|DELETE)
+     * @param string $route The route regex, custom regex must start with an @. You can use multiple pre-set regex filters, like [i:id]
+     * @param mixed $target The target where this route should point to. Can be anything.
+     * @param string $name Optional name of this route. Supply if you want to reverse route this url in your application.
+     * @throws Exception
+    */
+    public function map($method, $route, $target, $name = null) {
+        $this->getRouter()->map($method, $route, $target, $name);
     }
 
     public function setRouterBase($routerBaseUrl) {
@@ -56,7 +57,7 @@ class RouteUtils extends RouteCore {
 
         return $routeRule;
     }
-
+    
     public static function serve($file, $baseDir = "public") {
         $filePath = "{$baseDir}/{$file}";
 
@@ -74,23 +75,7 @@ class RouteUtils extends RouteCore {
             );
         }
 
-        $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
-        $mimesSupported = array(
-            "css" => " 	text/css",
-            "png" => "image/png",
-            "gif" => "image/gif",
-            "jpg" => "image/jpeg",
-            "js" => "application/x-javascript",
-            "txt" => "text/plain",
-            "html" => "text/html",
-        );
-
-        $selectedMime = "text/plain";
-
-        if (isset($mimesSupported[$fileExtension])) {
-            $selectedMime = $mimesSupported[$fileExtension];
-        }
-
+        $selectedMime = Utils::getMimeType($filePath);
         $contentTypeHeader = "Content-Type: {$selectedMime}";
 
         try

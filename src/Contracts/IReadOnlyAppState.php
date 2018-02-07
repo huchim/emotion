@@ -21,6 +21,11 @@ interface IReadOnlyAppState {
      * @return string
      */
     public function getRouterBase();
+    
+    /**
+     * Obtiene el directorio principal de la aplicación.
+     */
+    public function getDirectoryBase();
 
     /**
      * Devuelve la cadena de conexión existente en la configuración.

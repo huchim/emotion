@@ -1,6 +1,5 @@
 <?php namespace Emotion\Configuration;
 
-use \Emotion\Contracts\Configuration\IConfigurationSource;
 use \Emotion\Contracts\Configuration\IConfigurationRoot;
 use \Emotion\Exceptions\ExceptionCodes;
 
@@ -49,12 +48,12 @@ class ConfigurationRoot implements IConfigurationRoot {
         }
     }
 
-    public function getValue($key) {
+    public function getValue($key, $default = null) {
         if (isset($this->config[$key])) {
             return $this->config[$key];
         }
 
-        return null;
+        return $default;
     }
 
     public function getConnectionString($connectionName) {
