@@ -12,7 +12,11 @@ class App extends Bootstrapper implements IReadOnlyAppState {
      */
     private $logger = null;
 
-    public function __construct() {
+    /**
+     * Inicializa una nueva instancia de la clase App.
+     * @param bool $loadDefaults Carga la configuración predeterminada del sitio.
+     */
+    public function __construct($loadDefaults = true) {
         parent::__construct();
         $this->logger = new \Emotion\Loggers\Logger(self::class);
         
@@ -22,6 +26,10 @@ class App extends Bootstrapper implements IReadOnlyAppState {
             $dirRoot = Utils::normalizePath(realpath(dirname($currentScriptName)));
             $this->logger->info(0, "Estableciendo directorio: {$dirRoot}");
             $this->setDirectoryBase($dirRoot);
+        }
+        
+        if ($loadDefaults) {
+            $this->loadDefaultConfiguration();
         }
     }
 
