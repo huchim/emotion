@@ -1,8 +1,9 @@
 <?php namespace Emotion\Core\Routes;
 
 use \Emotion\Utils;
-use \Emotion\Contracts\Configuration\IConfigurationRoot;
+use \Emotion\Contracts\IStaticFolderRoute;
 use \Emotion\Contracts\IReadOnlyAppState;
+use \Emotion\Core\StaticFolderRoute;
 
 class RouteExtra extends RouteUtils {
     /**
@@ -29,7 +30,7 @@ class RouteExtra extends RouteUtils {
 
         return $app;
     }
-
+    
     public function addMvc(
         $routeName = "default",
         $rules = "[a:controllerName]?/[a:controllerAction]?/?") {
@@ -139,8 +140,55 @@ class RouteExtra extends RouteUtils {
     public function addStaticFiles(
         $routeName = "public", 
         $rules = "public/[*:publicFile]") {
-            $this->addStaticFolderEx("public", $rules, $routeName);
+        
+            // Asignar el mismo nombre de la carpeta.
+            $ruleObj = new StaticFolderRoute();
+
+            $ruleObj->setDirectory("public");
+            $ruleObj->setRule($rules, "Rule-" . $routeName);
+            
+            $this->AddCustomStaticFolder($this->ensureDefaults($ruleObj));
     }
+    
+    public function AddCustomStaticFolder(IStaticFolderRoute $staticFolder) {
+        if ($staticFolder == null) {
+            throw new \Exception("La información de la carpeta es nula.");
+        }
+        
+        // Reglas que se aplicarán en el enrutador.
+        $expectedRules = $staticFolder->getRules();
+        
+        // Obtener la referencia a la aplicación.
+        $appState = $this->getReadOnlyState($this);
+        
+        // Cada regla debe agregarse al enrutador.
+        foreach ($expectedRules as $routeRule) {
+            $expectedRule = $this->formatRouteRule($routeRule);
+            
+            $this->map("GET", $expectedRule, function($publicFile = null) use ($staticFolder, $appState) {
+                $logger = new \Emotion\Loggers\Logger("static:map:1");
+                
+                // Definir el archivo que se esta solicitando por la regla.
+                $staticFolder->setRequestFileName($publicFile);
+                
+                // Referenciar al estado de la aplicación.
+                $staticFolder->setReadOnlyAppState($appState);
+                
+                // Eliminar el callback para que no sea llamado nuevamente.
+                $c = $staticFolder->getCallback();
+                
+                $logger->info(0, "Llamando callback: {$publicFile}");
+
+                // Enlazar 
+                $c2 = \Closure::bind($c, $staticFolder);
+                
+                // Ejecutar la función.
+                $c2();
+            });
+        }
+        
+    }
+    
 
     /**
      * Agrega una carpeta estática al enrutador.
@@ -155,57 +203,102 @@ class RouteExtra extends RouteUtils {
         $folderName,
         $defaultDocument = null,
         $virtualFolder = null,
-        $rules = "{virtualFolder}[*:publicFile]")
-        {
-            if ($virtualFolder === null) {
-                $virtualFolder = $folderName . "/";
-            }
-
-            if ($defaultDocument != null) {
-                // Cuando existe un documento "predeterminado", se debe agregar que 
-                // busque en toda la carpeta primero.
-                $this->addStaticFolder($folderName, null, $virtualFolder);
-
-                // Y luego cambiar la regla para que acepte solo ese ruta.
-                $rules = "{virtualFolder}/";
-            }
-
-            // Asignar el mismo nombre de la carpeta.
-            $rules = str_replace("{virtualFolder}", $virtualFolder, $rules);
-            $this->addStaticFolderEx($folderName, $rules, $folderName . "Rule-" . $rules, $defaultDocument);
-    }
-
-    public function addStaticFolderEx(
-        $folderName,
-        $routeRules,
-        $routeName,
-        $defaultDocument = null) {
-            // Localizar la ruta principal de la aplicación.
-            $root = $this->getDirectoryBase();
+        $rules = "{virtualFolder}[*:publicFile]") {
+            // Crear la regla.
+            $staticFolder = $this->getStaticFolderInstance($folderName, $defaultDocument, $virtualFolder, $rules);
             
-            // Ajustar la ruta para que considere bien la carpeta.
-            $folderLocation = "{$root}/{$folderName}";
+            // Agregar al sistema.
+            $this->AddCustomStaticFolder($staticFolder);
+    }
+    
+    /**
+     * 
+     * @param type $folderName
+     * @param type $defaultDocument
+     * @param string $virtualFolder
+     * @param type $rules
+     * @throws \Exception
+     * @return \Emotion\Contracts\IStaticFolderRoute
+     */
+    private function getStaticFolderInstance(
+        $folderName,
+        $defaultDocument = null,
+        $virtualFolder = null,
+        $rules = "{virtualFolder}[*:publicFile]",
+        $callback = null)
+        {
+            if ($rules == "") {
+                throw new \Exception("Debe indicar una regla.");
+            }
+            
+            // Asignar el mismo nombre de la carpeta.
+            $ruleObj = new StaticFolderRoute();
+            
+            $ruleObj->setDefaultDocument($defaultDocument);
+            $ruleObj->setDirectory($folderName);
+            $ruleObj->setRule($rules, "Rule-" . $rules);
+            $ruleObj->setVirtualDirectory($virtualFolder);
+            $ruleObj->setCallback($callback);
 
-            // Configurar correctamente la regla.
-            $rules = $this->formatRouteRule($routeRules);
+            return $this->ensureDefaults($ruleObj);
+    }
+    
+    /**
+     * Devuelve un objeto con los valores predeterminados.
+     * 
+     * @param IStaticFolderRoute $staticFolder
+     * @return IStaticFolderRoute
+     */
+    public function ensureDefaults(IStaticFolderRoute $staticFolder) {
+        $callback = $staticFolder->getCallback();
+        
+        if ($callback == null) {
+                $callback = $this->getDefaultStaticCallbackBehavior();
+        }
+            
+        $staticFolder->setCallback($callback);
 
-            $this->logger->debug(0, "Agregando una ruta estática al ruteador. Regla: " . $rules . ", folder: " . $folderLocation);
+        return $staticFolder;
+    }
+    
+    public function getDefaultStaticCallbackBehavior() 
+    {
+        return function() {
+            $logger = new \Emotion\Loggers\Logger("defaultCBeh");
+            
+            $logger->debug(0, "Ejecutando comportamiento predeterminado para carpetas estáticas.");
+            // Para obtener las sugerencias del editor, paso $this por esta función.
+            // Así el editor sabe que se refiere a un IStaticFolderRoute.
+            // No es necesario en tiempo de ejecución.
+            $thisObj = Utils::getAsStaticFolderRoute($this);
+            
+            // Conformo la ruta de acceso a la carpeta base.
+            $rootDirectory = $thisObj->getReadOnlyAppState()->getDirectoryBase();
+            $folderLocation = $rootDirectory . $thisObj->getDirectory();
 
-            $this->map("GET", $rules, function($publicFile = null) use ($folderLocation, $defaultDocument) {
-                if ($publicFile == null && $defaultDocument == null) {
-                    // No se permite no pasar el nombre del archivo cuando no hay un documento predeterminado.
-                    throw new \Emotion\Exceptions\InternalException(
-                        sprintf(ExceptionCodes::S_ROUTE_STATIC_FILE_EMPTY, $folderLocation),
-                        ExceptionCodes::E_ROUTE_STATIC_FILE_EMPTY
-                    );
-                }
+            // Asigno la información de la ruta estática.
+            $defaultDocument = $thisObj->getDefaultDocument();
+            $publicFile = $thisObj->getRequestFileName();
+            
+            $logger->info("Root: ", $rootDirectory);
+            $logger->info("folderLocation: ", $folderLocation);
+            $logger->info("defaultDocument: ", $defaultDocument);
+            $logger->info("publicFile: ", $publicFile);
 
-                if ($publicFile == null && $defaultDocument != null) {
-                    // Asignar el nombre del archivo cuando este no haya sido definido.
-                    $publicFile = $defaultDocument;
-                }
+            if ($publicFile == null && $defaultDocument == null) {
+                // No se permite no pasar el nombre del archivo cuando no hay un documento predeterminado.
+                throw new \Emotion\Exceptions\InternalException(
+                    sprintf(ExceptionCodes::S_ROUTE_STATIC_FILE_EMPTY, $folderLocation),
+                    ExceptionCodes::E_ROUTE_STATIC_FILE_EMPTY
+                );
+            }
 
-                RouteUtils::serve($publicFile, $folderLocation);
-            }, $routeName);
+            if ($publicFile == null && $defaultDocument != null) {
+                // Asignar el nombre del archivo cuando este no haya sido definido.
+                $publicFile = $defaultDocument;
+            }
+
+            RouteUtils::serve($publicFile, $folderLocation);
+        };
     }
 }

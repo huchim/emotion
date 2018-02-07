@@ -18,6 +18,15 @@ abstract class Utils {
         });
     }
     
+    /**
+     * Recupera la instancia de la ruta.
+     * @param \Emotion\Contracts\IStaticFolderRoute $route
+     * @return \Emotion\Contracts\IStaticFolderRoute
+     */
+    public static function getAsStaticFolderRoute(\Emotion\Contracts\IStaticFolderRoute $route) {
+        return $route;
+    }
+    
     public static function getMimeType($filePath, $defaultMime = "text/plain") {
         $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
         $mimesSupported = array(

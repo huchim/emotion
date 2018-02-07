@@ -23,7 +23,6 @@ class CoreRouteTest extends TestCase
         // Core::clearRouter();
         self::$app = new \Emotion\App();
         self::$app->setDirectoryBase("tests/");
-        self::$app->loadDefaultConfiguration();
     }
 
     /**

@@ -14,7 +14,6 @@ class AppStaticFolderTest extends TestCase
 
         self::$app = new \Emotion\App();
         self::$app->setDirectoryBase("tests/");
-        self::$app->loadDefaultConfiguration();        
         self::$app->addStaticFolder("public");
     }
 

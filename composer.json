@@ -9,6 +9,9 @@
         },
         { "packagist": false }
     ],
+    "scripts": {
+        "test": "phpunit --bootstrap vendor/autoload.php tests"
+    },
     "require": {
         "twig/twig": "^1.0",
         "altorouter/altorouter": "^1.2",
