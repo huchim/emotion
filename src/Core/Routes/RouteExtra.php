@@ -151,21 +151,29 @@ class RouteExtra extends RouteUtils {
     }
     
     public function AddCustomStaticFolder(IStaticFolderRoute $staticFolder) {
+        $this->logger->trace(0, "Agregando carpeta estática personalizada.");
+        
         if ($staticFolder == null) {
             throw new \Exception("La información de la carpeta es nula.");
         }
         
+        $this->logger->debug(0, "Confirmando valores predeterminados.");
         $routeConfig = $this->ensureDefaults($staticFolder);
         
+        $this->logger->debug(0, "Obteniendo reglas...");
         // Reglas que se aplicarán en el enrutador.
         $expectedRules = $routeConfig->getRules();
+        $this->logger->info(0, "Hay " . count($expectedRules) . " reglas definidas.");
         
         // Obtener la referencia a la aplicación.
+        $this->logger->debug(0, "Recuperando valor actual del estado de la aplicación.");
         $appState = $this->getReadOnlyState($this);
         
         // Cada regla debe agregarse al enrutador.
+        $this->logger->debug(0, "Asignando reglas al enrutador.");
         foreach ($expectedRules as $routeRule) {
-            $expectedRule = $this->formatRouteRule($routeRule);
+            $this->logger->info(0, "Regla: {$routeRule}");
+            $expectedRule = $this->formatRouteRule($routeRule);            
             
             $this->map("GET", $expectedRule, function($publicFile = null) use ($routeConfig, $appState) {
                 $logger = new \Emotion\Loggers\Logger("static:map:1");
@@ -252,13 +260,18 @@ class RouteExtra extends RouteUtils {
      * @return IStaticFolderRoute
      */
     public function ensureDefaults(IStaticFolderRoute $staticFolder) {
+        $this->logger->trace(0, "Validando configuraciones predeterminadas.");
         $callback = $staticFolder->getCallback();
         
         if ($callback == null) {
-                $callback = $this->getDefaultStaticCallbackBehavior();
-        }
+            $this->logger->debug(0, "Creando función predeterminada.");
+            $callback = $this->getDefaultStaticCallbackBehavior();
             
-        $staticFolder->setCallback($callback);
+            $this->logger->debug(0, "Asignando función predeterminada.");
+            $staticFolder->setCallback($callback);
+        } else {
+            $this->logger->info(0, "La confirmación tiene su propia función de retorno.");
+        }
 
         return $staticFolder;
     }

@@ -17,8 +17,9 @@ class App extends Bootstrapper implements IReadOnlyAppState {
      * @param bool $loadDefaults Carga la configuración predeterminada del sitio.
      */
     public function __construct($loadDefaults = true) {
-        parent::__construct();
+        parent::__construct();        
         $this->logger = new \Emotion\Loggers\Logger(self::class);
+        $this->logger->trace(0, "Inicializando aplicación...");
         
         $currentScriptName = HttpContext::server('SCRIPT_FILENAME') ?? "";
         
@@ -34,6 +35,7 @@ class App extends Bootstrapper implements IReadOnlyAppState {
     }
 
     public function run() {
+        $this->logger->info(0, "Ejecutando aplicación");
         $router = $this->getRouter();
 
         if ($router === null) {
@@ -57,6 +59,7 @@ class App extends Bootstrapper implements IReadOnlyAppState {
         $requestMethod = HttpContext::server("REQUEST_METHOD");
         $urlBase = $this->getRouterBase();
 
+        $this->logger->info(0, "Uri: {$requestUri}::{$requestMethod}");
         $match = $router->match($requestUri, $requestMethod);
 
         // Definer resultado activo del enrutador.
@@ -65,9 +68,10 @@ class App extends Bootstrapper implements IReadOnlyAppState {
         // Ejecutar la ruta o devolver un error 404.
         if( $match && is_callable( $match['target'] ) ) {
             // Código usualmente en \Emotion\Routes\RouteExtra
+            $this->logger->debug(0, "El resultado se puede ejecutar.");
             $c = call_user_func_array( $match['target'], $match['params'] ); 
         } else {
-            // no route was matched
+            $this->logger->warn(0, "No se pudo coincidir ninguna ruta.");
             try {
                 header(HttpContext::server("SERVER_PROTOCOL") . ' 404 Not Found');
             } catch (\Exception $ex) {
@@ -80,6 +84,12 @@ class App extends Bootstrapper implements IReadOnlyAppState {
                     ExceptionCodes::S_ROUTER_NOT_FOUND,
                     ExceptionCodes::E_ROUTER_NOT_FOUND,
                     $ex);
+            }
+            
+            $this->logger->warn(0, "Error: 404. Rutas: " . count($routesList));
+
+            foreach ($routesList as $routeName => $route) {
+                $this->logger->debug(0, "\"{$requestUri}\" (base: {$urlBase}) con {$routeName} bajo la regla {$route[1]}");
             }
         }
     }

@@ -1,7 +1,6 @@
 <?php namespace Emotion\Loggers;
 
 use \Emotion\Contracts\ILogger;
-use \Emotion\Core\EmotionClass;
 
 class Logger implements ILogger {
     const trace = 0;
@@ -63,13 +62,17 @@ class Logger implements ILogger {
             file_put_contents('php://stdout', $log . "\n");
         }
     }
+    
+    public function debug($eventId, $exception) {
+        $this->log(self::debug, $eventId, $exception);
+    }
+    
+    public function trace($eventId, $exception) {
+        $this->log(self::trace, $eventId, $exception);
+    }
 
     public function info($eventId, $exception) {
         $this->log(self::information, $eventId, $exception);
-    }
-
-    public function debug($eventId, $exception) {
-        $this->log(self::debug, $eventId, $exception);
     }
 
     public function warn($eventId, $exception) {

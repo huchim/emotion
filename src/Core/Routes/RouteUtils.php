@@ -36,6 +36,7 @@ class RouteUtils extends RouteCore {
     }
 
     public function formatRouteRule($routeRule) {
+        $this->logger->trace(0, "Normalizando patrón de la regla URL.");
         // Hay que determinar si existe una base a la URL para
         // poder agregar el prefijo correctamente.
         $routerBase = $this->getRouterBase() ?? "";
@@ -55,6 +56,7 @@ class RouteUtils extends RouteCore {
             $routeRule = substr($routeRule, 1);
         }
 
+        $this->logger->trace(0, "Se conformo la regla como {$routeRule}");
         return $routeRule;
     }
     
