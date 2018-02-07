@@ -14,6 +14,22 @@ class Bootstrapper extends RouteExtra {
         parent::__construct();
         $this->logger = new \Emotion\Loggers\Logger(self::class);
     }
+    
+    public function folderIsExcluded($uri) {
+        $ignoreFolders = $this->getIgnoredFolders() ?? [];
+        $this->logger->trace(0, "Verificando que {$uri} no esté excluido.");
+        
+        foreach ($ignoreFolders as $folder) {
+            $this->logger->debug(0, "Comparando con {$folder}");
+            if (substr($uri, 0, strlen($folder)) === $folder) {
+                $this->logger->info(0, "La URL se encuentra excluída.");
+                return true;
+            }
+        }
+        
+        $this->logger->debug(0, "La URL debe ser procesada por el enrutador.");
+        return false;
+    }
 
     public function loadDefaultConfiguration() {
         $this->logger->info(0, "Cargando configuración predeterminada.");

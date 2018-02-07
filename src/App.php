@@ -34,8 +34,40 @@ class App extends Bootstrapper implements IReadOnlyAppState {
         }
     }
 
+    public function byPass($fileName) {
+        if (substr($fileName, 0, 1) === "/") {
+            $fileName = substr($fileName, 1);
+        }
+        
+        if (!file_exists($fileName)) {            
+            try {
+                header(HttpContext::server("SERVER_PROTOCOL") . ' 404 Not Found');
+            } catch (\Exception $ex) {
+                throw new \Emotion\Exceptions\RouteException(
+                    ExceptionCodes::S_ROUTER_NOT_FOUND,
+                    ExceptionCodes::E_ROUTER_NOT_FOUND,
+                    $ex);
+            }
+            
+            $this->logger->warn(0, "No existe el archivo {$fileName}");
+        } else {
+            $mime = \Emotion\Utils::getMimeType($fileName);            
+            header("Content-Type: {$mime}");
+            echo \file_get_contents($fileName);
+        }
+    }
+    
     public function run() {
         $this->logger->info(0, "Ejecutando aplicación");
+        
+        $requestUri = HttpContext::server("REQUEST_URI");
+        $requestMethod = HttpContext::server("REQUEST_METHOD");
+        
+        if ($this->folderIsExcluded($requestUri)) {
+            $this->byPass($requestUri);
+            return;
+        }
+        
         $router = $this->getRouter();
 
         if ($router === null) {
@@ -55,8 +87,6 @@ class App extends Bootstrapper implements IReadOnlyAppState {
             $this->addMvc();
         }
 
-        $requestUri = HttpContext::server("REQUEST_URI");
-        $requestMethod = HttpContext::server("REQUEST_METHOD");
         $urlBase = $this->getRouterBase();
 
         $this->logger->info(0, "Uri: {$requestUri}::{$requestMethod}");

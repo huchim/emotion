@@ -2,6 +2,11 @@
 
 interface IReadOnlyAppState {
     /**
+     * Obtiene una lista de de carpetas que serán ignoradas.
+     */
+    public function getIgnoredFolders();
+    
+    /**
      * Recupera los resultados de la operación "map" del enrutador.
      *
      * @return \AltoRouter

@@ -17,6 +17,31 @@ class RouteExtra extends RouteUtils {
         parent::__construct();
         $this->logger = new \Emotion\Loggers\Logger(self::class);
     }
+    
+    public function excludeFolder($folders) {
+        if (!is_array($folders)) {
+            $this->excludeFolder([$folders]);
+            return;
+        }
+        
+        $ignoredFolders = $this->getIgnoredFolders();
+        
+        foreach ($folders as $folder) {
+            if (substr($folder, 0, 1) !== "/") {
+                $folder = "/" . $folder;
+            }
+            
+            if (!in_array($folder, $ignoredFolders)) {
+                $ignoredFolders[] = $folder;
+            }
+        }
+        
+        $this->configuration->updateValue("ignore", $ignoredFolders);
+    }
+    
+    public function getIgnoredFolders() {
+        return $this->configuration->getValue("ignore", []);
+    }
 
     /**
      * Devuelve el estado de sólo lectura de la aplicación.
@@ -145,6 +170,7 @@ class RouteExtra extends RouteUtils {
             $ruleObj = new StaticFolderRoute();
 
             $ruleObj->setDirectory("public");
+            $ruleObj->setVirtualDirectory("public");
             $ruleObj->setRule($rules, "Rule-" . $routeName);
             
             $this->AddCustomStaticFolder($this->ensureDefaults($ruleObj));
