@@ -155,8 +155,10 @@ class RouteExtra extends RouteUtils {
             throw new \Exception("La información de la carpeta es nula.");
         }
         
+        $routeConfig = $this->ensureDefaults($staticFolder);
+        
         // Reglas que se aplicarán en el enrutador.
-        $expectedRules = $staticFolder->getRules();
+        $expectedRules = $routeConfig->getRules();
         
         // Obtener la referencia a la aplicación.
         $appState = $this->getReadOnlyState($this);
@@ -165,22 +167,22 @@ class RouteExtra extends RouteUtils {
         foreach ($expectedRules as $routeRule) {
             $expectedRule = $this->formatRouteRule($routeRule);
             
-            $this->map("GET", $expectedRule, function($publicFile = null) use ($staticFolder, $appState) {
+            $this->map("GET", $expectedRule, function($publicFile = null) use ($routeConfig, $appState) {
                 $logger = new \Emotion\Loggers\Logger("static:map:1");
                 
                 // Definir el archivo que se esta solicitando por la regla.
-                $staticFolder->setRequestFileName($publicFile);
+                $routeConfig->setRequestFileName($publicFile);
                 
                 // Referenciar al estado de la aplicación.
-                $staticFolder->setReadOnlyAppState($appState);
+                $routeConfig->setReadOnlyAppState($appState);
                 
                 // Eliminar el callback para que no sea llamado nuevamente.
-                $c = $staticFolder->getCallback();
+                $c = $routeConfig->getCallback();
                 
                 $logger->info(0, "Llamando callback: {$publicFile}");
 
                 // Enlazar 
-                $c2 = \Closure::bind($c, $staticFolder);
+                $c2 = \Closure::bind($c, $routeConfig);
                 
                 // Ejecutar la función.
                 $c2();
