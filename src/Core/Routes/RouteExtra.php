@@ -17,6 +17,11 @@ class RouteExtra extends RouteUtils {
         parent::__construct();
         $this->logger = new \Emotion\Loggers\Logger(self::class);
     }
+
+    public function excludeDefaults(
+        $excluded = ["public", "html", "node_modules", "src", "vendor" ]) {
+            $this->excludeFolder($excluded);
+    }
     
     public function excludeFolder($folders) {
         if (!is_array($folders)) {
