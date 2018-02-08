@@ -17,6 +17,19 @@ abstract class Utils {
             }
         });
     }
+
+    /**
+     * Devuelve un valor que indica si la aplicación está en modo desarrollo.
+     *
+     * @return boolean
+     */
+    public static function isDebug() {
+        if (defined("APP_DEBUG")) {
+            return APP_DEBUG === true;
+        }
+
+        return false;
+    }
     
     /**
      * Recupera la instancia de la ruta.

@@ -1,6 +1,7 @@
 <?php namespace Emotion\Loggers;
 
 use \Emotion\Contracts\ILogger;
+use \Emotion\Utils;
 
 class Logger implements ILogger {
     const trace = 0;
@@ -11,6 +12,7 @@ class Logger implements ILogger {
     const fatal = 5;
     private $instanceName = null;
     private $debug = false;
+    private $minimumLevel = self::error;
 
     private $logLevel = [
         "trace",
@@ -24,8 +26,15 @@ class Logger implements ILogger {
     public function __construct($instanceName) {
         $this->instanceName = $instanceName;
 
-        if (defined("APP_DEBUG")) {
-            $this->setDebugMode(APP_DEBUG);
+        // Definir si se generará un registro de mensaje.
+        $this->debug = Utils::isDebug();
+
+        if (defined("APP_DEBUG_LEVEL")) {
+            $this->minimumLevel = APP_DEBUG_LEVEL;
+        }
+
+        if ($this->minimumLevel < self::trace && $this->minimumLevel > self::fatal) {
+            throw new \Exception("El nivel definido de error no está permitido.");
         }
     }
 
@@ -34,7 +43,7 @@ class Logger implements ILogger {
     }
 
     public function log($level, $eventId, $exception, $formatter = null) {
-        if (!$this->debug) {
+        if (!$this->debug || $level < $this->minimumLevel) {
             return;
         }
 

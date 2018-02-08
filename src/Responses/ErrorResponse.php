@@ -1,6 +1,7 @@
 <?php namespace Emotion\Responses;
 
 use \Emotion\HttpContext;
+use \Emotion\Utils;
 
 class ErrorResponse extends BaseResponse {
     private $errorCode = 500;
@@ -15,9 +16,9 @@ class ErrorResponse extends BaseResponse {
     public function process() {
         header(HttpContext::server("SERVER_PROTOCOL") . " {$this->errorCode} {$this->errorMessage}");
 
-        $config = \Emotion\Configuration\ConfigurationCore::getInstance();
+        $isDebug = Utils::isDebug();
 
-        if ($config->isDebug()) {
+        if ($isDebug) {
             echo "Ocurrió un problema en el sistema, el código es <strong>{$this->errorCode} - {$this->errorMessage}</strong>. <br /><br />";
 
             if ($this->innerException !== null) {

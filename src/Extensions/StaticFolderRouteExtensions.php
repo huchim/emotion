@@ -14,4 +14,13 @@ class StaticFolderRouteExtensions extends ClassDecorator {
         
         return $folderLocation;
     }
+
+    /**
+     * Undocumented function
+     *
+     * @return \Emotion\Contracts\IStaticFolderRoute
+     */
+    public function getInstance() {
+        return $this->_instance;
+    }
 }
