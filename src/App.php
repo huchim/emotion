@@ -35,6 +35,14 @@ class App extends Bootstrapper implements IReadOnlyAppState {
     }
 
     public function byPass($fileName) {
+        $this->logger->trace(0, "El archivo no será procesado por el enrutador.");
+        $enableByPass = $this->getConfiguration()->getValue("tryByPass", false);
+
+        if (!$enableByPass) {
+            return false;
+        }
+
+        $this->logger->warn(0, "Se intentará abrir y devolver el archivo que se encuentra en la carpeta excluída.");
         if (substr($fileName, 0, 1) === "/") {
             $fileName = substr($fileName, 1);
         }
@@ -49,12 +57,19 @@ class App extends Bootstrapper implements IReadOnlyAppState {
                     $ex);
             }
             
-            $this->logger->warn(0, "No existe el archivo {$fileName}");
+            $this->logger->debug(0, "No existe el archivo {$fileName}");
         } else {
-            $mime = \Emotion\Utils::getMimeType($fileName);            
+            $mime = \Emotion\Utils::getMimeType($fileName);
+            $this->logger->debug(0, "El archivo esta siendo enviado al navegador.");
+
             header("Content-Type: {$mime}");
             echo \file_get_contents($fileName);
+
+            return true;
         }
+
+        $this->logger->error(0, "No se pudo abrir el archivo {$fileName} porque no existe.");
+        return false;
     }
     
     public function run() {
@@ -64,8 +79,7 @@ class App extends Bootstrapper implements IReadOnlyAppState {
         $requestMethod = HttpContext::server("REQUEST_METHOD");
         
         if ($this->folderIsExcluded($requestUri)) {
-            $this->byPass($requestUri);
-            return;
+            return $this->byPass($requestUri);
         }
         
         $router = $this->getRouter();
@@ -100,6 +114,8 @@ class App extends Bootstrapper implements IReadOnlyAppState {
             // Código usualmente en \Emotion\Routes\RouteExtra
             $this->logger->debug(0, "El resultado se puede ejecutar.");
             $c = call_user_func_array( $match['target'], $match['params'] ); 
+
+            return true;
         } else {
             $this->logger->warn(0, "No se pudo coincidir ninguna ruta.");
             try {
@@ -122,5 +138,7 @@ class App extends Bootstrapper implements IReadOnlyAppState {
                 $this->logger->debug(0, "\"{$requestUri}\" (base: {$urlBase}) con {$routeName} bajo la regla {$route[1]}");
             }
         }
+
+        return false;
     }
 }
