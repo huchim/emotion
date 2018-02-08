@@ -50,6 +50,9 @@ abstract class Utils {
             "js" => "application/x-javascript",
             "txt" => "text/plain",
             "html" => "text/html",
+            "ttf" => "application/x-font-ttf",
+            "woff" => "application/x-font-woff",
+            "woff2" => "font/woff2"
         );
 
         $selectedMime = $defaultMime;

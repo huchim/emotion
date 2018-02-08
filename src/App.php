@@ -36,7 +36,7 @@ class App extends Bootstrapper implements IReadOnlyAppState {
 
     public function byPass($fileName) {
         $this->logger->trace(0, "El archivo no será procesado por el enrutador.");
-        $enableByPass = $this->getConfiguration()->getValue("tryByPass", false);
+        $enableByPass = $this->getConfiguration()->getValue("tryByPass", true);
 
         if (!$enableByPass) {
             return false;
