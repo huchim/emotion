@@ -19,7 +19,7 @@ class RouteExtra extends RouteUtils {
     }
 
     public function excludeDefaults(
-        $excluded = ["public", "html", "node_modules", "src", "vendor" ]) {
+        $excluded = ["public", "node_modules", "src", "vendor" ]) {
             $this->excludeFolder($excluded);
     }
     
