@@ -84,6 +84,13 @@ class ControllerBase implements IControllerBase {
             $paramsOptions[$param->name] = $param->isOptional();
         }
 
+        // Si el método es POST, puedo crear el payload.
+        $createPayload = $this->getRequestMethod() === "POST";
+        
+        if ($createPayload) {
+            $payload = \Emotion\HttpContext::post();
+        }
+        
         foreach ($paramValues as $key => $value) {
             $found = false;
             $paramFromGetArray = \Emotion\HttpContext::get($key);
@@ -97,6 +104,12 @@ class ControllerBase implements IControllerBase {
             // las variables de POST tienen prioridad sobre GET.
             if ($paramFromPostArray !== null) {
                 $paramValues[$key] = $paramFromPostArray;
+                $found = true;
+            }
+            
+            if (strtolower($key) == "payload" && $createPayload) {
+                // Asignar la variable "payload" desde el contenido de FORM.
+                $paramValues[$key] = $payload;
                 $found = true;
             }
 
