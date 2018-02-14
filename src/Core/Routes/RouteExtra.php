@@ -158,7 +158,7 @@ class RouteExtra extends RouteUtils {
 
                 // Obtener la carpeta raíz de API.
                 $rootFolder = $appState->getConfiguration()->getValue("src");
-                $apiFolder = $appState->getConfiguration()->getValue("api");
+                $apiFolder = $appState->getConfiguration()->getValue("api", "api");
 
                 // Obtener la carpeta de controladores.
                 $baseDir = Utils::combinePaths($rootFolder, $apiFolder);
