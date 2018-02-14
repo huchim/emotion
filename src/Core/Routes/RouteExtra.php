@@ -148,9 +148,13 @@ class RouteExtra extends RouteUtils {
             $appState = $this->getReadOnlyState($this);
 
             $this->map( 'GET|POST', $rules, function($controllerName = "Home", $controllerAction = "Index") use ($appState) {
+                $logger = new \Emotion\Loggers\Logger("mvc-api");
+                
                 if (!($appState instanceof IReadOnlyAppState)) {
                     throw new \Exception("Se requiere una instancia de IReadOnlyAppState.");
                 }
+
+                $logger->debug(0, "Inicializando motor de controladores...");
 
                 // Obtener la carpeta raíz de API.
                 $rootFolder = $appState->getConfiguration()->getValue("src");
@@ -159,10 +163,16 @@ class RouteExtra extends RouteUtils {
                 // Obtener la carpeta de controladores.
                 $baseDir = Utils::combinePaths($rootFolder, $apiFolder);
 
+                $logger->info(0, "root: {$rootFolder}");
+                $logger->info(0, "root: {$apiFolder}");
+                $logger->info(0, "root: {$baseDir}");
+
                 // Obtener el acceso al controlador.
                 $controller = new \Emotion\Controller($controllerName, $controllerAction, $baseDir);
+                $logger->debug(0, "El motor ha sido inicializado...");
             
                 // Ejecutarla y enviar la salida al navegador.
+                $logger->debug(0, "Ejecutando motor de controladores...");
                 $controller->run("", $appState)->tryProcess();
             }, $routeName);
     }
