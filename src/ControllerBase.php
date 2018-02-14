@@ -86,15 +86,17 @@ class ControllerBase implements IControllerBase {
 
         foreach ($paramValues as $key => $value) {
             $found = false;
+            $paramFromGetArray = \Emotion\HttpContext::get($key);
+            $paramFromPostArray = \Emotion\HttpContext::post($key);
 
-            if (isset($_GET[$key])) {
-                $paramValues[$key] = $_GET[$key];
+            if ($paramFromGetArray !== null) {
+                $paramValues[$key] = $paramFromGetArray;
                 $found = true;
             }
 
             // las variables de POST tienen prioridad sobre GET.
-            if (isset($_POST[$key])) {
-                $paramValues[$key] = $_POST[$key];
+            if (paramFromPostArray !== null) {
+                $paramValues[$key] = $paramFromPostArray;
                 $found = true;
             }
 
