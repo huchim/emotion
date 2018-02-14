@@ -63,7 +63,7 @@ class RouteExtra extends RouteUtils {
     
     public function addMvc(
         $routeName = "default",
-        $rules = "[a:controllerName]?/[a:controllerAction]?/[*:id]?") {
+        $rules = "[a:controllerName]?/[a:controllerAction]?/?") {
             $rules = $this->formatRouteRule($rules);
 
             $this->logger->debug(0, "Agregando una ruta MVC. Regla: " . $rules);
@@ -73,18 +73,13 @@ class RouteExtra extends RouteUtils {
             $this->map(
                 'GET|POST',
                 $rules, 
-                function($controllerName = "Home", $controllerAction = "Index", $id = null) use ($appState) {
+                function($controllerName = "Home", $controllerAction = "Index") use ($appState) {
                     $logger = new \Emotion\Loggers\Logger("mvc-run");
 
                     if (!($appState instanceof IReadOnlyAppState)) {
                         throw new \Exception("Se requiere una instancia de IReadOnlyAppState.");
                     }
 
-                    // Asignar el id si existe.
-                    if ($id !== null) {
-                        \Emotion\HttpContext::get("id", $id);
-                    }
-                    
                     // Obtener la carpeta raíz de MVC.
                     $rootFolder = $appState->getConfiguration()->getValue("src");
                     $mvcFolder  = $appState->getConfiguration()->getValue("mvc");
