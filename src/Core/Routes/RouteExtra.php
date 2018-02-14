@@ -63,7 +63,7 @@ class RouteExtra extends RouteUtils {
     
     public function addMvc(
         $routeName = "default",
-        $rules = "[a:controllerName]?/[a:controllerAction]?/[a:id]?") {
+        $rules = "[a:controllerName]?/[a:controllerAction]?/[*:id]?") {
             $rules = $this->formatRouteRule($rules);
 
             $this->logger->debug(0, "Agregando una ruta MVC. Regla: " . $rules);
