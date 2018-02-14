@@ -95,7 +95,7 @@ class ControllerBase implements IControllerBase {
             }
 
             // las variables de POST tienen prioridad sobre GET.
-            if (paramFromPostArray !== null) {
+            if ($paramFromPostArray !== null) {
                 $paramValues[$key] = $paramFromPostArray;
                 $found = true;
             }
