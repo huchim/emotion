@@ -146,17 +146,22 @@ class RouteExtra extends RouteUtils {
 
     public function addMvcApi(
         $routeName = "api",
-        $rules = "api/[a:controllerName]?/[a:controllerAction]?/?") {
+        $rules = "api/[a:controllerName]?/[a:controllerAction]?/[*:id]?") {
             $rules = $this->formatRouteRule($rules);
 
             $this->logger->debug(0, "Agregando una ruta API MVC. Regla: " . $rules);
             $appState = $this->getReadOnlyState($this);
 
-            $this->map( 'GET|POST', $rules, function($controllerName = "Home", $controllerAction = "Index") use ($appState) {
+            $this->map( 'GET|POST', $rules, function($controllerName = "Home", $controllerAction = "Index", $id = null) use ($appState) {
                 $logger = new \Emotion\Loggers\Logger("mvc-api");
                 
                 if (!($appState instanceof IReadOnlyAppState)) {
                     throw new \Exception("Se requiere una instancia de IReadOnlyAppState.");
+                }
+
+                // Asignar el id si existe.
+                if ($id !== null) {
+                    \Emotion\HttpContext::get("id", $id);
                 }
 
                 $logger->debug(0, "Inicializando motor de controladores...");
