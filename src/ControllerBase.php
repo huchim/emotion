@@ -102,7 +102,7 @@ class ControllerBase implements IControllerBase {
 
             if (!$found && $paramsOptions[$key] === false) {
                 // Si se requiere y no fue encontrado lanzar error.
-                throw new \Emotion\InternalException("Se requiere el argumento {$key} para poder continuar.");
+                throw new \Emotion\Exceptions\InternalException("Se requiere el argumento {$key} para poder continuar.");
             }
         }
 
