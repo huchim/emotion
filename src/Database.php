@@ -31,6 +31,8 @@ class Database implements IDatabase {
      * @param \Emotion\Contracts\Configuration\IConfigurationRoot $configuration
      */
     public function __construct(IConfigurationRoot $configuration, $connectionName = null) {
+        $this->logger = new \Emotion\Loggers\Logger(self::class);
+
         // De aquí obtendremos las cadenas de configuración.
         $this->configuration = $configuration;
 
@@ -43,8 +45,6 @@ class Database implements IDatabase {
             $this->logger->debug(0, "Utilizando cadena de conexión predeterminada: " + APP_CONNECTION);
             $this->connectionName = APP_CONNECTION;
         }
-
-        $this->logger = new \Emotion\Loggers\Logger(self::class);
     }
 
     /**
