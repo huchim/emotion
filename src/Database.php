@@ -114,7 +114,15 @@ class Database implements IDatabase {
             $this->logger->trace(0, "Param: {$key}={$value}");
         }
 
+        $normalizedParams = [];
+
+        foreach ($params as $k => $v) {
+            // fetchAffected no soporta los parámetros que inicien con ":".
+            $key = str_replace(":", "", $k);
+            $normalizedParams[$key] = $v;
+        }
+
         $this->logger->debug(0, "Ejecutando instrucciones...");
-        return $connection->fetchAffected($query, $params);
+        return $connection->fetchAffected($query, $normalizedParams);
     }
 }
