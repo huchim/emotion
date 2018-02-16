@@ -23,14 +23,26 @@ class Database implements IDatabase {
     private $logger = null;
     private $connections = [];
     private $defaultDriver = "sqlsrv";
+    private $connectionName = "default";
 
     /**
      * Undocumented function
      *
      * @param \Emotion\Contracts\Configuration\IConfigurationRoot $configuration
      */
-    public function __construct(IConfigurationRoot $configuration) {
+    public function __construct(IConfigurationRoot $configuration, $connectionName = null) {
+        // De aquí obtendremos las cadenas de configuración.
         $this->configuration = $configuration;
+
+        // Establecer el nombre de la conexión predeterminado para esta instancia.
+        if ($connectionName !== null) {
+            $this->connectionName = $connectionName;
+        }
+
+        if ($connectionName === null && defined("APP_CONNECTION")) {
+            $this->connectionName = APP_CONNECTION;
+        }
+
         $this->logger = new \Emotion\Loggers\Logger(self::class);
     }
 
@@ -40,7 +52,11 @@ class Database implements IDatabase {
      * @param string $connectionName
      * @return \Aura\Sql\ExtendedPdo
      */
-    public function getConnection($connectionName = "default") {
+    public function getConnection($connectionName = null) {
+        if ($connectionName === null) {
+            $connectionName = $this->connectionName;
+        }
+
         if (isset($this->connections[$connectionName])) {
             return $this->connections[$connectionName];
         }
@@ -66,11 +82,24 @@ class Database implements IDatabase {
         return $this->getConnection($connectionName);
     }
 
-    public function query($connectionName, $query, $params = array()) {
-        $connection = $this->connect($connectionName);
+    public function query($query, $params = array(), $connectionName = null) {
+        if ($connectionName === null) {
+            $connectionName = $this->connectionName;
+        }
+
+        $connection = $this->getConnection($connectionName);
         $sth = $connection->prepare($query);
         $sth->execute($params);
 
-        return $sth->fetchAll(\PDO::FETCH_ASSOC);;
+        return $sth->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function execute($query, $params = array(), $connectionName = null) {
+        if ($connectionName === null) {
+            $connectionName = $this->connectionName;
+        }
+
+        $connection = $this->getConnection($connectionName);
+        return $connection->fetchAffected($query, $params);
     }
 }

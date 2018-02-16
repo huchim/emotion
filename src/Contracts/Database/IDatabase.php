@@ -7,7 +7,7 @@ interface IDatabase {
      * @param string $connectionName
      * @return \Aura\Sql\ExtendedPdo
      */
-    public function getConnection($connectionName = "default");
+    public function getConnection($connectionName = null);
 
     /**
      * Devuelve la conexión a la base de datos.
@@ -16,14 +16,6 @@ interface IDatabase {
      * @return \Aura\Sql\ExtendedPdo
      */
     public function connect($connectionName);
-
-    /**
-     * Undocumented function
-     *
-     * @param string $connectionName
-     * @param string $query
-     * @param array $params
-     * @return array
-     */
-    public function query($connectionName, $query, $params = array());
+    public function query($query, $params = array(), $connectionName = null);
+    public function execute($query, $params = array(), $connectionName = null);
 }
