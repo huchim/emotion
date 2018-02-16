@@ -40,6 +40,7 @@ class Database implements IDatabase {
         }
 
         if ($connectionName === null && defined("APP_CONNECTION")) {
+            $this->logger->debug(0, "Utilizando cadena de conexión predeterminada: " + APP_CONNECTION);
             $this->connectionName = APP_CONNECTION;
         }
 
@@ -87,8 +88,13 @@ class Database implements IDatabase {
             $connectionName = $this->connectionName;
         }
 
+        $this->logger->trace(0, "Connection name: {$connectionName}");
         $connection = $this->getConnection($connectionName);
+
+        $this->logger->trace(0, "SQL: {$query}");
         $sth = $connection->prepare($query);
+
+        $this->logger->debug(0, "Ejecutando consulta");
         $sth->execute($params);
 
         return $sth->fetchAll(\PDO::FETCH_ASSOC);
@@ -99,7 +105,16 @@ class Database implements IDatabase {
             $connectionName = $this->connectionName;
         }
 
+        $this->logger->trace(0, "Connection name: {$connectionName}");
         $connection = $this->getConnection($connectionName);
+
+        $this->logger->trace(0, "SQL: {$query}");
+
+        foreach ($params as $key => $value) {
+            $this->logger->trace(0, "Param: {$key}={$value}");
+        }
+
+        $this->logger->debug(0, "Ejecutando instrucciones...");
         return $connection->fetchAffected($query, $params);
     }
 }
