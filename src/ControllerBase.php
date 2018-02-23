@@ -97,12 +97,24 @@ class ControllerBase implements IControllerBase {
             $paramFromPostArray = \Emotion\HttpContext::post($key);
 
             if ($paramFromGetArray !== null) {
+                $isJson = substr($paramFromGetArray, 0, 1) === "{";
+
+                if ($isJson) {
+                    $paramFromGetArray = json_decode($paramFromGetArray, true);
+                }
+
                 $paramValues[$key] = $paramFromGetArray;
                 $found = true;
             }
 
             // las variables de POST tienen prioridad sobre GET.
             if ($paramFromPostArray !== null) {
+                $isJson = substr($paramFromPostArray, 0, 1) === "{";
+
+                if ($isJson) {
+                    $paramFromPostArray = json_decode($paramFromPostArray, true);
+                }
+
                 $paramValues[$key] = $paramFromPostArray;
                 $found = true;
             }
