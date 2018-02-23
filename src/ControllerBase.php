@@ -90,6 +90,10 @@ class ControllerBase implements IControllerBase {
         if ($createPayload) {
             $payload = \Emotion\HttpContext::post();
         }
+
+        if (!defined("APP_MAP_JSON_PARAMETER")) {
+            define("APP_MAP_JSON_PARAMETER", true);
+        }
         
         foreach ($paramValues as $key => $value) {
             $found = false;
@@ -97,7 +101,7 @@ class ControllerBase implements IControllerBase {
             $paramFromPostArray = \Emotion\HttpContext::post($key);
 
             if ($paramFromGetArray !== null) {
-                $isJson = substr($paramFromGetArray, 0, 1) === "{";
+                $isJson = substr($paramFromGetArray, 0, 1) === "{" && APP_MAP_JSON_PARAMETER;
 
                 if ($isJson) {
                     $paramFromGetArray = json_decode($paramFromGetArray, true);
@@ -109,7 +113,7 @@ class ControllerBase implements IControllerBase {
 
             // las variables de POST tienen prioridad sobre GET.
             if ($paramFromPostArray !== null) {
-                $isJson = substr($paramFromPostArray, 0, 1) === "{";
+                $isJson = substr($paramFromPostArray, 0, 1) === "{" && APP_MAP_JSON_PARAMETER;
 
                 if ($isJson) {
                     $paramFromPostArray = json_decode($paramFromPostArray, true);
