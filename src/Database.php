@@ -21,6 +21,12 @@ class Database implements IDatabase {
      * @var \Emotion\Contracts\ILogger
      */
     private $logger = null;
+
+    /**
+     * Undocumented variable
+     *
+     * @var \Aura\Sql\ExtendedPdo[]
+     */
     private $connections = [];
     private $defaultDriver = "sqlsrv";
     private $connectionName = "default";
@@ -98,6 +104,28 @@ class Database implements IDatabase {
         $sth->execute($params);
 
         return $sth->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function insert($query, $params = array(), $connectionName = null) {
+        // Establezco el nombre de conmexión predeterminado a la base de datos.
+        if ($connectionName === null) {
+            $connectionName = $this->connectionName;
+        }
+
+        // Ejecuto la operación SQL sobre la base de datos, esperando
+        // recibir la cantidad de registros afectados por la operación.
+        $affectedRows = $this->execute($query, $params, $connectionName);
+
+        // Recupero la conexión utilizada ya que la función execute no me la devuelve
+        // pero estoy seguro del nombre de la conexión utilizada.
+        $this->logger->trace(0, "Connection name: {$connectionName}");
+        $connection = $this->getConnection($connectionName);
+
+        // Con la instancia de la conexión, puedo intentar recuperar el identificador
+        // de la operación, que de acuerdo a la documentación funciona en todas
+        // las bases de datos, o al menos en SQL Server y MySql, en Postgress requiere
+        // de un parámetro adicional que en su momento encontraré la manera de agregar.
+        return $connection->lastInsertId();
     }
 
     public function execute($query, $params = array(), $connectionName = null) {
