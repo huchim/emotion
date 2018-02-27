@@ -114,7 +114,7 @@ class Database implements IDatabase {
      * @param string $connectionName Nombre de la conexión a utilizar.ExtendedPdo
      * @return mixed Devuelve el último identificador de la operación.
      */
-    public function insert($query, $params = array(), $connectionName = null) {
+    public function insert($query, $params = array(), $colId = null, $connectionName = null) {
         // Establezco el nombre de conmexión predeterminado a la base de datos.
         if ($connectionName === null) {
             $connectionName = $this->connectionName;
@@ -141,7 +141,7 @@ class Database implements IDatabase {
         // de la operación, que de acuerdo a la documentación funciona en todas
         // las bases de datos, o al menos en SQL Server y MySql, en Postgress requiere
         // de un parámetro adicional que en su momento encontraré la manera de agregar.
-        return $connection->lastInsertId();
+        return $connection->lastInsertId($colId);
     }
 
     public function execute($query, $params = array(), $connectionName = null) {

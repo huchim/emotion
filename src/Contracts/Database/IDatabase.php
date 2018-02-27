@@ -18,5 +18,5 @@ interface IDatabase {
     public function connect($connectionName);
     public function query($query, $params = array(), $connectionName = null);
     public function execute($query, $params = array(), $connectionName = null);
-    public function insert($query, $params = array(), $connectionName = null);
+    public function insert($query, $params = array(), $colId = null, $connectionName = null);
 }
