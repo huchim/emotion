@@ -103,7 +103,23 @@ class Database implements IDatabase {
         $this->logger->debug(0, "Ejecutando consulta");
         $sth->execute($params);
 
-        return $sth->fetchAll(\PDO::FETCH_ASSOC);
+        $results = [];
+
+        do {
+            try {
+                $results[] = $sth->fetchAll(\PDO::FETCH_ASSOC);
+            } catch (\PDOException $ex) {
+                $this->logger->warn(1, "Este conjunto de datos no contiene resultados.");
+            }
+        } while ($sth->nextRowset());
+        
+        // En caso que sólo exista un único conjunto de datos, se devolverá este.
+        if (count($results) === 1) {
+            return $results[0];
+        }
+
+        // Si existen múltiples conjunto de datos se devolverán todos.
+        return $results;
     }
 
     /**
