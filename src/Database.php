@@ -106,6 +106,14 @@ class Database implements IDatabase {
         return $sth->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Realiza una operación de inserción de datos.ExtendedPdo
+     *
+     * @param string $query Operación SQL a ejecutar.ExtendedPdo
+     * @param array $params Lista de parámetros a sustituir dentro de la operación.ExtendedPdo
+     * @param string $connectionName Nombre de la conexión a utilizar.ExtendedPdo
+     * @return mixed Devuelve el último identificador de la operación.
+     */
     public function insert($query, $params = array(), $connectionName = null) {
         // Establezco el nombre de conmexión predeterminado a la base de datos.
         if ($connectionName === null) {
