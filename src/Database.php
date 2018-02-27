@@ -120,14 +120,22 @@ class Database implements IDatabase {
             $connectionName = $this->connectionName;
         }
 
-        // Ejecuto la operación SQL sobre la base de datos, esperando
-        // recibir la cantidad de registros afectados por la operación.
-        $affectedRows = $this->execute($query, $params, $connectionName);
-
-        // Recupero la conexión utilizada ya que la función execute no me la devuelve
-        // pero estoy seguro del nombre de la conexión utilizada.
         $this->logger->trace(0, "Connection name: {$connectionName}");
+        $this->logger->trace(0, "SQL: {$query}");
+
+        // Recupero la instancia de conexión a la base de datos.
         $connection = $this->getConnection($connectionName);
+
+        // Normalizo los párametros antes de ejecutar la consulta
+        // para que tengan el formato requerido por PDO.
+        $normalizedParams = $this->normalizeParams($params);
+
+        // Preparo la operación a ejecutar.
+        $statement = $connection->prepare($query);
+
+        // Ejecuto la operación con los parámetros pasados a esta función, lo
+        // cual me devolverá un número de filas afectadas.
+        $affectedRows = $statement->execute($normalizedParams);        
 
         // Con la instancia de la conexión, puedo intentar recuperar el identificador
         // de la operación, que de acuerdo a la documentación funciona en todas
@@ -142,23 +150,25 @@ class Database implements IDatabase {
         }
 
         $this->logger->trace(0, "Connection name: {$connectionName}");
-        $connection = $this->getConnection($connectionName);
-
         $this->logger->trace(0, "SQL: {$query}");
 
-        foreach ($params as $key => $value) {
-            $this->logger->trace(0, "Param: {$key}={$value}");
-        }
-
-        $normalizedParams = [];
-
-        foreach ($params as $k => $v) {
-            // fetchAffected no soporta los parámetros que inicien con ":".
-            $key = str_replace(":", "", $k);
-            $normalizedParams[$key] = $v;
-        }
+        $connection = $this->getConnection($connectionName);
+        $normalizedParams = $this->normalizeParams($params);
 
         $this->logger->debug(0, "Ejecutando instrucciones...");
         return $connection->fetchAffected($query, $normalizedParams);
+    }
+
+    private function normalizeParams(array $params) {
+        $normalizedParams = [];
+
+        foreach ($params as $paramName => $paramValue) {
+            // fetchAffected no soporta los parámetros que inicien con ":".
+            $this->logger->trace(0, "Param: {$paramName}={$paramValue}");
+            $key = str_replace(":", "", $paramName);
+            $normalizedParams[$key] = $paramValue;
+        }
+
+        return $normalizedParams;
     }
 }
