@@ -141,7 +141,9 @@ class Database implements IDatabase {
         // de la operación, que de acuerdo a la documentación funciona en todas
         // las bases de datos, o al menos en SQL Server y MySql, en Postgress requiere
         // de un parámetro adicional que en su momento encontraré la manera de agregar.
-        return $connection->lastInsertId($colId);
+        $lastInsertId = $connection->lastInsertId($colId);
+
+        $this->logger->trace(0, "Last inserted id: \"{$lastInsertId}\"");
     }
 
     public function execute($query, $params = array(), $connectionName = null) {
