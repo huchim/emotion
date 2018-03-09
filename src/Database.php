@@ -51,6 +51,11 @@ class Database implements IDatabase {
             $this->logger->debug(0, "Utilizando cadena de conexión predeterminada: " + APP_CONNECTION);
             $this->connectionName = APP_CONNECTION;
         }
+
+        if (!defined("APP_DB_DRIVER")) {
+            $this->logger->trace(1, "Asignando gestor predeterminado: " + $this->defaultDriver);
+            define("APP_DB_DRIVER", $this->defaultDriver);
+        }
     }
 
     /**
@@ -73,7 +78,7 @@ class Database implements IDatabase {
 
         $server = $connectionOptions["server"];
         $database = $connectionOptions["database"];
-        $driver = $this->defaultDriver;
+        $driver = APP_DB_DRIVER;
 
         $this->logger->debug(0, "Creando conexión de tipo: {$connectionName}");
         $this->connections[$connectionName] = new ExtendedPdo(
