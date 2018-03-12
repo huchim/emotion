@@ -42,7 +42,7 @@ class Logger implements ILogger {
         $this->debug = $appDebug;
     }
 
-    public function log($level, $eventId, $exception, $formatter = null) {
+    public function log($level, $eventId, $exception, $meta = [], $formatter = null) {
         if (!$this->debug || $level < $this->minimumLevel) {
             return;
         }
@@ -56,12 +56,14 @@ class Logger implements ILogger {
             return;
         }
 
-        $tpl = "N: " . str_pad($this->logLevel[$level], 12) . "| EvId: {$eventId} | M: %s | C: {$this->instanceName}";
+        $tpl = "N: " . str_pad($this->logLevel[$level], 12) . "| EvId: {$eventId} | M: %s | D: %s | C: {$this->instanceName}";
         $minLength = 20;
+        $meta1 = is_array($meta) ? json_encode($meta) : "";
+
         if ($exception instanceof \Exception) {
             $log = sprintf($tpl, str_pad($exception->getMessage(), $minLength));
         } else {
-            $log = sprintf($tpl, str_pad($exception, $minLength));
+            $log = sprintf($tpl, str_pad($exception, $minLength), $meta1);
         }
 
         if ($level > self::information) {
@@ -72,27 +74,27 @@ class Logger implements ILogger {
         }
     }
     
-    public function debug($eventId, $exception) {
-        $this->log(self::debug, $eventId, $exception);
+    public function debug($eventId, $exception, $meta = []) {
+        $this->log(self::debug, $eventId, $exception, $meta = []);
     }
     
-    public function trace($eventId, $exception) {
-        $this->log(self::trace, $eventId, $exception);
+    public function trace($eventId, $exception, $meta = []) {
+        $this->log(self::trace, $eventId, $exception, $meta = []);
     }
 
-    public function info($eventId, $exception) {
-        $this->log(self::information, $eventId, $exception);
+    public function info($eventId, $exception, $meta = []) {
+        $this->log(self::information, $eventId, $exception, $meta = []);
     }
 
-    public function warn($eventId, $exception) {
-        $this->log(self::warning, $eventId, $exception);
+    public function warn($eventId, $exception, $meta = []) {
+        $this->log(self::warning, $eventId, $exception, $meta = []);
     }
 
-    public function error($eventId, $exception) {
-        $this->log(self::error, $eventId, $exception);
+    public function error($eventId, $exception, $meta = []) {
+        $this->log(self::error, $eventId, $exception, $meta = []);
     }
 
-    public function fatal($eventId, $exception) {
-        $this->log(self::fatal, $eventId, $exception);
+    public function fatal($eventId, $exception, $meta = []) {
+        $this->log(self::fatal, $eventId, $exception, $meta = []);
     }
 }
