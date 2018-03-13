@@ -102,6 +102,8 @@ class Logger implements ILogger {
             return "";
         }
 
+        var_dump($trace);;
+
         $x = $trace; // array_reverse($trace);
 
         if (count($x) <= 1) {
