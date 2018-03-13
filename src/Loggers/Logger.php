@@ -13,6 +13,7 @@ class Logger implements ILogger {
     private $instanceName = null;
     private $debug = false;
     private $minimumLevel = self::error;
+    private $context = "";
 
     private $logLevel = [
         "trace",
@@ -38,6 +39,10 @@ class Logger implements ILogger {
         }
     }
 
+    public function context($context = "") {
+        $this->context = $context;
+    }
+
     public function setDebugMode(bool $appDebug) {
         $this->debug = $appDebug;
     }
@@ -56,15 +61,24 @@ class Logger implements ILogger {
             return;
         }
 
-        $tpl = "N: " . str_pad($this->logLevel[$level], 12) . "| EvId: {$eventId} | M: %s | D: %s | C: {$this->instanceName}";
+        $tpl = "N: " . str_pad($this->logLevel[$level], 12) . "| EvId: {$eventId} | M: %s | D: %s | C: {$this->instanceName}%s";
         $minLength = 20;
         $meta1 = is_array($meta) ? json_encode($meta) : "";
 
         if ($exception instanceof \Exception) {
-            $log = sprintf($tpl, str_pad($exception->getMessage(), $minLength));
+            $message = str_pad($exception->getMessage(), $minLength);
         } else {
-            $log = sprintf($tpl, str_pad($exception, $minLength), $meta1);
+            $message = str_pad($exception, $minLength);
         }
+
+        $context = $this->context;
+
+        $log = sprintf(
+            $tpl,
+            $message,
+            $meta1,
+            $context
+        );
 
         if ($level > self::information) {
             // throw new \Exception("No se permite debug en pruebas");
@@ -74,27 +88,64 @@ class Logger implements ILogger {
         }
     }
     
+    private function getContext($trace) {
+        if ($this->context === null) {
+            return null;
+        }
+
+        if ($this->context !== "") {
+            return $this->context;
+        }
+
+        // Get from trace...
+        if ($trace === null) {
+            $x = array_reverse($trace);
+
+            if (count($x) <= 1) {
+                return "invalid";
+            }
+
+            return isset($x[0]["function"]) ? $x[0]["function"] : "unknown";
+        }
+    }
+
+    private function backtraceEnabled() {
+        return $this->context !== null && $this->context === "";
+    }
+
     public function debug($eventId, $exception, $meta = []) {
+        // Only configure backtrace if context is not disabled.
+        $this->context = $this->getContext($this->backtraceEnabled() ? debug_backtrace() : null);
         $this->log(self::debug, $eventId, $exception, $meta = []);
     }
     
     public function trace($eventId, $exception, $meta = []) {
+        // Only configure backtrace if context is not disabled.
+        $this->context = $this->getContext($this->backtraceEnabled() ? debug_backtrace() : null);
         $this->log(self::trace, $eventId, $exception, $meta = []);
     }
 
     public function info($eventId, $exception, $meta = []) {
+        // Only configure backtrace if context is not disabled.
+        $this->context = $this->getContext($this->backtraceEnabled() ? debug_backtrace() : null);
         $this->log(self::information, $eventId, $exception, $meta = []);
     }
 
     public function warn($eventId, $exception, $meta = []) {
+        // Only configure backtrace if context is not disabled.
+        $this->context = $this->getContext($this->backtraceEnabled() ? debug_backtrace() : null);
         $this->log(self::warning, $eventId, $exception, $meta = []);
     }
 
     public function error($eventId, $exception, $meta = []) {
+        // Only configure backtrace if context is not disabled.
+        $this->context = $this->getContext($this->backtraceEnabled() ? debug_backtrace() : null);
         $this->log(self::error, $eventId, $exception, $meta = []);
     }
 
     public function fatal($eventId, $exception, $meta = []) {
+        // Only configure backtrace if context is not disabled.
+        $this->context = $this->getContext($this->backtraceEnabled() ? debug_backtrace() : null);
         $this->log(self::fatal, $eventId, $exception, $meta = []);
     }
 }

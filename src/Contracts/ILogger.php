@@ -8,4 +8,5 @@ interface ILogger {
     public function warn($eventId, $exception, $meta = []);
     public function error($eventId, $exception, $meta = []);
     public function fatal($eventId, $exception, $meta = []);
+    public function context($contextName = "");
 }
