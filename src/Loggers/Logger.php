@@ -102,15 +102,11 @@ class Logger implements ILogger {
             return "";
         }
 
-        var_dump($trace);;
-
         $x = $trace; // array_reverse($trace);
 
-        if (count($x) <= 1) {
-            return "invalid";
-        }
-
-        return isset($x[1]["function"]) ? $x[1]["function"] : "unknown";
+        // return isset($x[0]["function"]) ? $x[0]["function"] : "unknown";
+        // debug_backtrace is not working properly when you call it from another class method.
+        return "unknown";
     }
 
     private function backtraceEnabled() {
@@ -119,37 +115,37 @@ class Logger implements ILogger {
 
     public function debug($eventId, $exception, $meta = []) {
         // Only configure backtrace if context is not disabled.
-        $this->context = $this->getContext($this->backtraceEnabled() ? debug_backtrace() : null);
+        $this->context = $this->getContext($this->backtraceEnabled() ? debug_backtrace(2, 1) : null);
         $this->log(self::debug, $eventId, $exception, $meta = []);
     }
     
     public function trace($eventId, $exception, $meta = []) {
         // Only configure backtrace if context is not disabled.
-        $this->context = $this->getContext($this->backtraceEnabled() ? debug_backtrace() : null);
+        $this->context = $this->getContext($this->backtraceEnabled() ? debug_backtrace(2, 1) : null);
         $this->log(self::trace, $eventId, $exception, $meta = []);
     }
 
     public function info($eventId, $exception, $meta = []) {
         // Only configure backtrace if context is not disabled.
-        $this->context = $this->getContext($this->backtraceEnabled() ? debug_backtrace() : null);
+        $this->context = $this->getContext($this->backtraceEnabled() ? debug_backtrace(2, 1) : null);
         $this->log(self::information, $eventId, $exception, $meta = []);
     }
 
     public function warn($eventId, $exception, $meta = []) {
         // Only configure backtrace if context is not disabled.
-        $this->context = $this->getContext($this->backtraceEnabled() ? debug_backtrace() : null);
+        $this->context = $this->getContext($this->backtraceEnabled() ? debug_backtrace(2, 1) : null);
         $this->log(self::warning, $eventId, $exception, $meta = []);
     }
 
     public function error($eventId, $exception, $meta = []) {
         // Only configure backtrace if context is not disabled.
-        $this->context = $this->getContext($this->backtraceEnabled() ? debug_backtrace() : null);
+        $this->context = $this->getContext($this->backtraceEnabled() ? debug_backtrace(2, 1) : null);
         $this->log(self::error, $eventId, $exception, $meta = []);
     }
 
     public function fatal($eventId, $exception, $meta = []) {
         // Only configure backtrace if context is not disabled.
-        $this->context = $this->getContext($this->backtraceEnabled() ? debug_backtrace() : null);
+        $this->context = $this->getContext($this->backtraceEnabled() ? debug_backtrace(2, 1) : null);
         $this->log(self::fatal, $eventId, $exception, $meta = []);
     }
 }
