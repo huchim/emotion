@@ -102,13 +102,13 @@ class Logger implements ILogger {
             return "";
         }
 
-        $x = array_reverse($trace);
+        $x = $trace; // array_reverse($trace);
 
         if (count($x) <= 1) {
             return "invalid";
         }
 
-        return isset($x[0]["function"]) ? $x[0]["function"] : "unknown";
+        return isset($x[1]["function"]) ? $x[1]["function"] : "unknown";
     }
 
     private function backtraceEnabled() {
