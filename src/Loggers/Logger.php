@@ -99,14 +99,16 @@ class Logger implements ILogger {
 
         // Get from trace...
         if ($trace === null) {
-            $x = array_reverse($trace);
-
-            if (count($x) <= 1) {
-                return "invalid";
-            }
-
-            return isset($x[0]["function"]) ? $x[0]["function"] : "unknown";
+            return "";
         }
+
+        $x = array_reverse($trace);
+
+        if (count($x) <= 1) {
+            return "invalid";
+        }
+
+        return isset($x[0]["function"]) ? $x[0]["function"] : "unknown";
     }
 
     private function backtraceEnabled() {
